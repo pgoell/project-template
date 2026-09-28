@@ -1,13 +1,11 @@
 # mise.toml: tasks for developing the template itself
 
 [tools]
-uv        = "latest"
-lefthook  = "latest"
-cocogitto = "latest"
-jq        = "latest"
+uv = "latest"
 
 [tasks.test]
 description = "Render the template into a temp dir and run its lint and tests"
+shell = "bash -c"
 run = '''
 set -euo pipefail
 out=$(mktemp -d)/sample-project

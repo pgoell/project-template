@@ -22,11 +22,6 @@ python_version:
   help: Python version
   default: "3.14"
 
-github_owner:
-  type: str
-  help: GitHub user or organisation
-  default: pgoell
-
 default_branch:
   type: str
   help: Default branch
