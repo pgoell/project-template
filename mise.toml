@@ -1,0 +1,23 @@
+# mise.toml: tasks for developing the template itself
+
+[tools]
+uv        = "latest"
+lefthook  = "latest"
+cocogitto = "latest"
+jq        = "latest"
+
+[tasks.test]
+description = "Render the template into a temp dir and run its lint and tests"
+run = '''
+set -euo pipefail
+out=$(mktemp -d)/sample-project
+uvx copier copy --defaults --vcs-ref HEAD --data project_name=sample-project --data description="Sample project." . "$out"
+cd "$out"
+git init -q -b master
+mise trust -q
+mise install -q
+uv sync -q
+mise run lint
+mise run test
+echo "rendered and checked: $out"
+'''

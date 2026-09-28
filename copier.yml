@@ -1,0 +1,41 @@
+# Copier template: Python project on mise, uv, lefthook, cocogitto, ruff, ty, pytest.
+_subdirectory: template
+_templates_suffix: .jinja
+
+project_name:
+  type: str
+  help: Project name (repo and distribution name, kebab-case)
+  validator: "{% if not (project_name | regex_search('^[a-z][a-z0-9-]*$')) %}Use lowercase letters, digits and hyphens{% endif %}"
+
+package_name:
+  type: str
+  help: Python import name
+  default: "{{ project_name | replace('-', '_') }}"
+
+description:
+  type: str
+  help: One-line description
+  default: ""
+
+python_version:
+  type: str
+  help: Python version
+  default: "3.14"
+
+github_owner:
+  type: str
+  help: GitHub user or organisation
+  default: pgoell
+
+default_branch:
+  type: str
+  help: Default branch
+  default: master
+
+author_name:
+  type: str
+  default: pgoell
+
+author_email:
+  type: str
+  default: pascal98kraus@gmail.com
