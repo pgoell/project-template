@@ -18,7 +18,11 @@ usage() {
 Usage: scripts/apply-github-settings.sh [--check | --dry-run | --skip-verify] [--help]
 
 Applies .github/repo-settings.json via PATCH /repos/:owner/:repo, then
-.github/branch-protection.json via PUT /repos/:owner/:repo/branches/:default/protection.
+.github/branch-protection.json via PUT /repos/:owner/:repo/branches/:default/protection,
+then the Actions settings: .github/actions-permissions.json (allowlist on, every
+action pinned to a commit SHA) and .github/selected-actions.json (the allowlist).
+On a public repo it also holds every outside contributor's workflow runs for
+approval.
 Reads branch protection back and diffs the normalized result against the source
 JSON. Exits non-zero on drift.
 
@@ -68,6 +72,8 @@ DEFAULT_BRANCH=${REPO_INFO##* }
 
 REPO_SETTINGS=.github/repo-settings.json
 BRANCH_PROTECTION=.github/branch-protection.json
+ACTIONS_PERMISSIONS=.github/actions-permissions.json
+SELECTED_ACTIONS=.github/selected-actions.json
 
 echo "target: $OWNER_REPO (branch: $DEFAULT_BRANCH)"
 
@@ -105,6 +111,9 @@ fi
 if [[ "$DRY_RUN" == "1" ]]; then
   echo "→ would run: gh api --method PATCH /repos/$OWNER_REPO --input $REPO_SETTINGS"
   echo "→ would run: gh api --method PUT  /repos/$OWNER_REPO/branches/$DEFAULT_BRANCH/protection --input $BRANCH_PROTECTION"
+  echo "→ would run: gh api --method PUT  /repos/$OWNER_REPO/actions/permissions --input $ACTIONS_PERMISSIONS"
+  echo "→ would run: gh api --method PUT  /repos/$OWNER_REPO/actions/permissions/selected-actions --input $SELECTED_ACTIONS"
+  echo "→ would run, on a public repo: gh api --method PUT /repos/$OWNER_REPO/actions/permissions/fork-pr-contributor-approval -f approval_policy=all_external_contributors"
   echo "✔ dry run complete, no changes made"
   exit 0
 fi
@@ -115,6 +124,16 @@ gh api --method PATCH "/repos/$OWNER_REPO" --input "$REPO_SETTINGS" >/dev/null
 echo "→ applying branch protection"
 gh api --method PUT "/repos/$OWNER_REPO/branches/$DEFAULT_BRANCH/protection" \
   --input "$BRANCH_PROTECTION" >/dev/null
+
+echo "→ applying Actions settings"
+gh api --method PUT "/repos/$OWNER_REPO/actions/permissions" --input "$ACTIONS_PERMISSIONS" >/dev/null
+gh api --method PUT "/repos/$OWNER_REPO/actions/permissions/selected-actions" \
+  --input "$SELECTED_ACTIONS" >/dev/null
+# GitHub refuses this setting on a private repo, where no fork can open a PR.
+if [[ "$(gh repo view --json visibility --jq .visibility)" == "PUBLIC" ]]; then
+  gh api --method PUT "/repos/$OWNER_REPO/actions/permissions/fork-pr-contributor-approval" \
+    -f approval_policy=all_external_contributors >/dev/null
+fi
 
 if [[ "$SKIP_VERIFY" == "1" ]]; then
   echo "✔ applied (verify skipped)"
