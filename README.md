@@ -12,7 +12,7 @@ git init -b master
 mise trust && mise install && mise run install
 git add -A && git commit -m "chore: initial commit"
 gh repo create pgoell/my-project --public --source . --push
-mise run repo:apply-settings   # optional: merge settings + branch protection
+mise run repo:apply-settings   # merge settings, branch protection, Actions allowlist and SHA pinning
 ```
 
 ## What you get
@@ -23,10 +23,10 @@ mise run repo:apply-settings   # optional: merge settings + branch protection
 | `pyproject.toml` | uv package in `src/`, dev group pytest, ruff, ty |
 | `.config/lefthook.yaml` | commit-msg: cog; pre-commit: lint; pre-push: test, commits |
 | `cog.toml` | Conventional Commits check |
-| `.github/workflows/ci.yml` | Lint, Test, Commits jobs |
+| `.github/workflows/ci.yml` | Lint, Test, Commits jobs, every action pinned to a commit SHA |
 | `.github/workflows/pr-title.yml` | PR title must be a conventional commit |
 | `.github/dependabot.yml` | weekly uv and Actions updates |
-| `.github/*.json`, `scripts/` | repo settings and branch protection, applied with `gh` |
+| `.github/*.json`, `scripts/` | repo settings, branch protection (admins included), Actions allowlist, required SHA pins and fork PR approval, applied with `gh` |
 | `.claude/CLAUDE.md` | project instructions for Claude Code |
 
 ## Update a generated project
