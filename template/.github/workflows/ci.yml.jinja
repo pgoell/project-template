@@ -25,6 +25,8 @@ jobs:
         run: mise run lint
       - name: File size
         run: scripts/check-file-size
+      - name: Fan-out
+        run: scripts/check-fan-out --all
 
   test:
     name: Test

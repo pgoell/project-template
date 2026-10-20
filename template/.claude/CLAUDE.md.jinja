@@ -18,6 +18,13 @@ mise run fmt            # ruff format
 mise run check-commits  # cocogitto on unpushed commits
 ```
 
+## Structure
+
+- Build deep modules: a small interface over much hidden work. No pass-through wrappers, barrel files or `utils` grab bags.
+- A package exports its public names through `__init__.py` and `__all__`. Other modules import those names and reach no deeper.
+- At most about 7 entries per folder; above that, group by concept into a subfolder with one entry point. `scripts/check-fan-out` enforces it, with `.fan-out-baseline` for accepted overages and `.fan-out-excludes` for folders that are lists by design.
+- No file passes 5000 tokens (bytes/4); `scripts/check-file-size` enforces it. A Claude Code hook in `.claude/settings.json` runs both checks on each edit.
+
 ## Conventions
 
 - Conventional Commits (`feat:`, `fix:`, `chore:` ...). The `commit-msg` hook rejects anything else.

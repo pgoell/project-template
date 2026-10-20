@@ -3,8 +3,13 @@
 [tools]
 uv = "latest"
 
+[tasks.test-scripts]
+description = "Test the check scripts and the Claude Code hook in throwaway repos"
+run = "bash tests/check-scripts.sh"
+
 [tasks.test]
-description = "Render the template into a temp dir and run its lint and tests"
+description = "Test the check scripts, then render the template into a temp dir and run its lint and tests"
+depends = ["test-scripts"]
 shell = "bash -c"
 run = '''
 set -euo pipefail
