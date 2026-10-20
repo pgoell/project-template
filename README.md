@@ -12,7 +12,7 @@ git init -b master
 mise trust && mise install && mise run install
 git add -A && git commit -m "chore: initial commit"
 gh repo create pgoell/my-project --public --source . --push
-mise run repo:apply-settings   # merge settings, branch protection, Actions allowlist and SHA pinning
+mise run repo:apply-settings   # merge settings, branch protection, Actions allowlist and SHA pinning, Dependabot security updates
 ```
 
 ## What you get
@@ -26,7 +26,7 @@ mise run repo:apply-settings   # merge settings, branch protection, Actions allo
 | `.github/workflows/ci.yml` | Lint, Test, Commits jobs, every action pinned to a commit SHA |
 | `.github/workflows/pr-title.yml` | PR title must be a conventional commit |
 | `.github/dependabot.yml` | weekly uv and Actions updates |
-| `.github/*.json`, `scripts/` | repo settings, branch protection (admins included), Actions allowlist, required SHA pins and fork PR approval, applied with `gh` |
+| `.github/*.json`, `scripts/` | repo settings, branch protection (admins included), Actions allowlist, required SHA pins, fork PR approval, vulnerability alerts and Dependabot security updates, applied with `gh` |
 | `.claude/CLAUDE.md` | project instructions for Claude Code |
 
 ## Update a generated project
