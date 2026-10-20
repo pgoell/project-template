@@ -23,6 +23,8 @@ jobs:
       - uses: ./.github/actions/setup-mise
       - name: Ruff and ty
         run: mise run lint
+      - name: File size
+        run: scripts/check-file-size
 
   test:
     name: Test
