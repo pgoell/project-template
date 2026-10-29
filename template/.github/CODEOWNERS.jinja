@@ -1,0 +1,36 @@
+# Paths a pull request may change only with a review from a code owner.
+# Branch protection requires that review, and GitHub reads this file from the
+# base branch, so a pull request cannot take its own paths off the list. A
+# pull request that touches nothing here merges on its checks alone.
+{%- set owners = approvers.split() | map('regex_replace', '^', '@') | join(' ') %}
+
+# CI, repo settings, the review prompts and this file
+/.github/ {{ owners }}
+/scripts/ {{ owners }}
+/mise.toml {{ owners }}
+/REVIEW.md {{ owners }}
+
+# Agent settings and git hooks
+/.claude/ {{ owners }}
+/.config/ {{ owners }}
+CLAUDE.md {{ owners }}
+
+# Deploy and containers
+/deploy/ {{ owners }}
+Dockerfile* {{ owners }}
+compose*.yml {{ owners }}
+compose*.yaml {{ owners }}
+
+# Migrations
+migrations/ {{ owners }}
+{%- if stack == 'python' %}
+
+# Manifest and lock
+pyproject.toml {{ owners }}
+uv.lock {{ owners }}
+{%- elif stack == 'typescript' %}
+
+# Manifest and lock
+package.json {{ owners }}
+bun.lock {{ owners }}
+{%- endif %}

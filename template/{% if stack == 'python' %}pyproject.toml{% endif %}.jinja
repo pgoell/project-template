@@ -3,9 +3,11 @@ name = "{{ project_name }}"
 version = "0.1.0"
 description = "{{ description }}"
 readme = "README.md"
+{% if author_name -%}
 authors = [
-    { name = "{{ author_name }}", email = "{{ author_email }}" }
+    { name = "{{ author_name }}"{% if author_email %}, email = "{{ author_email }}"{% endif %} }
 ]
+{% endif -%}
 requires-python = ">={{ python_version }}"
 dependencies = []
 

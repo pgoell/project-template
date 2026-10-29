@@ -1,3 +1,4 @@
+{% if stack == 'python' -%}
 # Python
 __pycache__/
 *.py[oc]
@@ -10,6 +11,13 @@ dist/
 .pytest_cache/
 .ruff_cache/
 .ty_cache/
+
+{% elif stack == 'typescript' -%}
+# TypeScript
+node_modules/
+dist/
+
+{% endif -%}
 
 # Secrets
 .env

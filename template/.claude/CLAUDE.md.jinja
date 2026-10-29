@@ -1,33 +1,50 @@
 # {{ project_name }}: project instructions
 
 {{ description }}
+{%- if stack != 'none' %}
 
 ## Layout
-
+{% if stack == 'python' %}
 - `src/{{ package_name }}/`: the package
 - `tests/`: pytest
+{%- else %}
+- `src/`: the code, entry point `src/index.ts`
+- `tests/`: vitest
+{%- endif %}
+{%- endif %}
 
 ## Commands
 
 mise owns every command. `mise tasks` lists them.
 
 ```sh
+{%- if stack == 'python' %}
 mise run test           # pytest
 mise run lint           # ruff check, ruff format --check, ty check
 mise run fmt            # ruff format
+{%- elif stack == 'typescript' %}
+mise run test           # vitest
+mise run lint           # biome check, tsc --noEmit
+mise run fmt            # biome format
+{%- endif %}
 mise run check-commits  # cocogitto on unpushed commits
 ```
 
 ## Structure
 
 - Build deep modules: a small interface over much hidden work. No pass-through wrappers, barrel files or `utils` grab bags.
+{%- if stack == 'python' %}
 - A package exports its public names through `__init__.py` and `__all__`. Other modules import those names and reach no deeper.
+{%- elif stack == 'typescript' %}
+- A module exports its public names from one entry file. Other modules import those names and reach no deeper.
+{%- endif %}
 - At most about 7 entries per folder; above that, group by concept into a subfolder with one entry point. `scripts/check-fan-out` enforces it, with `.fan-out-baseline` for accepted overages and `.fan-out-excludes` for folders that are lists by design.
 - No file passes 5000 tokens (bytes/4); `scripts/check-file-size` enforces it. A Claude Code hook in `.claude/settings.json` runs both checks on each edit.
 
 ## Conventions
 
 - Conventional Commits (`feat:`, `fix:`, `chore:` ...). The `commit-msg` hook rejects anything else.
-- Default branch is `{{ default_branch }}`. With branch protection applied (`mise run repo:apply-settings`), changes land through PRs that pass Lint, Test and Commits.
+- Default branch is `{{ default_branch }}`. With branch protection applied (`mise run repo:apply-settings`), changes land through PRs that pass Lint,{% if stack != 'none' %} Test,{% endif %} Commits, Review and Security.
+- Review and Security are Claude reviews in CI. They follow `REVIEW.md`; answer every Important thread before the merge. A PR that touches a path in `.github/CODEOWNERS` also needs a code owner's review.
 - Every `uses:` in a workflow names a full commit SHA, with the version as a comment. The repo refuses an action on a tag, and any action whose owner is not in `.github/selected-actions.json`. Dependabot updates the SHAs.
-- This project was generated from `gh:pgoell/project-template`. Update with `uvx copier update`.
+- Update from the Copier template with `uvx copier update`.
