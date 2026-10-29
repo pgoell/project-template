@@ -26,6 +26,8 @@ for stack in python typescript none; do
       mise trust -q
       mise install -q
       mise run -q install
+      # The size check judges tracked files only.
+      git add -A
       if [ "$stack" != none ]; then
         mise run lint
         mise run test
