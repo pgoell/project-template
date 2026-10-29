@@ -1,6 +1,6 @@
 # Git hooks. Installed by `mise run install`.
 #
-# pre-commit stays fast (lint, format, file size and fan-out only). Anything slow enough to make
+# pre-commit stays fast ({% if stack != 'none' %}lint, format, {% endif %}file size and fan-out only). Anything slow enough to make
 # you reach for --no-verify belongs in pre-push instead.
 
 commit-msg:
@@ -10,8 +10,10 @@ commit-msg:
 
 pre-commit:
   commands:
+{%- if stack != 'none' %}
     lint:
       run: mise run lint
+{%- endif %}
     file-size:
       run: scripts/check-file-size {staged_files}
     fan-out:
@@ -19,8 +21,10 @@ pre-commit:
 
 pre-push:
   commands:
+{%- if stack != 'none' %}
     test:
       run: mise run test
+{%- endif %}
     check-commits:
       run: mise run check-commits
     file-size:

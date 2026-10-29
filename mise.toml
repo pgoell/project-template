@@ -2,29 +2,14 @@
 
 [tools]
 uv = "latest"
+actionlint = "latest"
+shellcheck = "latest"
 
 [tasks.test-scripts]
 description = "Test the check scripts and the Claude Code hook in throwaway repos"
 run = "bash tests/check-scripts.sh"
 
 [tasks.test]
-description = "Test the check scripts, then render the template into a temp dir and run its lint and tests"
+description = "Test the check scripts, then render the template for each stack and context and check each render"
 depends = ["test-scripts"]
-shell = "bash -c"
-run = '''
-set -euo pipefail
-# Render from an export of HEAD, not from the repo: copier 9.19 checks a local
-# repo out with `--end-of-options`, which git 2.43 does not know.
-src=$(mktemp -d)
-git archive HEAD | tar -x -C "$src"
-out=$(mktemp -d)/sample-project
-uvx copier copy --defaults --data project_name=sample-project --data description="Sample project." "$src" "$out"
-cd "$out"
-git init -q -b master
-mise trust -q
-mise install -q
-uv sync -q
-mise run lint
-mise run test
-echo "rendered and checked: $out"
-'''
+run = "bash tests/render.sh"

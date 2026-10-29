@@ -1,0 +1,2 @@
+# bun's text lockfile, which the script's own list does not know yet
+bun.lock

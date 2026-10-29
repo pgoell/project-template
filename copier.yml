@@ -1,4 +1,5 @@
-# Copier template: Python project on mise, uv, lefthook, cocogitto, ruff, ty, pytest.
+# Copier template: a project on mise, lefthook, cocogitto and GitHub CI with a
+# Claude review, in Python, TypeScript, or neither.
 _subdirectory: template
 _templates_suffix: .jinja
 
@@ -7,20 +8,40 @@ project_name:
   help: Project name (repo and distribution name, kebab-case)
   validator: "{% if not (project_name | regex_search('^[a-z][a-z0-9-]*$')) %}Use lowercase letters, digits and hyphens{% endif %}"
 
-package_name:
-  type: str
-  help: Python import name
-  default: "{{ project_name | replace('-', '_') }}"
-
 description:
   type: str
   help: One-line description
   default: ""
 
+stack:
+  type: str
+  help: "Language: python (uv, ruff, ty, pytest), typescript (bun, biome, tsc, vitest) or none (docs, decks: no Test job)"
+  choices: [python, typescript, none]
+  default: python
+
+context:
+  type: str
+  help: "personal or work: work leaves out every personal default"
+  choices: [personal, work]
+  default: personal
+
+approvers:
+  type: str
+  help: GitHub logins, space-separated, who own the risky paths in .github/CODEOWNERS
+  default: "{% if context == 'personal' %}pgoell{% endif %}"
+  validator: "{% if not (approvers | regex_search('^[A-Za-z0-9-]+( [A-Za-z0-9-]+)*$')) %}Give one or more GitHub logins, separated by spaces{% endif %}"
+
+package_name:
+  type: str
+  help: Python import name
+  default: "{{ project_name | replace('-', '_') }}"
+  when: "{{ stack == 'python' }}"
+
 python_version:
   type: str
   help: Python version
   default: "3.14"
+  when: "{{ stack == 'python' }}"
 
 default_branch:
   type: str
@@ -29,8 +50,10 @@ default_branch:
 
 author_name:
   type: str
-  default: pgoell
+  default: "{% if context == 'personal' %}pgoell{% endif %}"
+  when: "{{ stack == 'python' }}"
 
 author_email:
   type: str
-  default: pascal98kraus@gmail.com
+  default: "{% if context == 'personal' %}pascal98kraus@gmail.com{% endif %}"
+  when: "{{ stack == 'python' }}"

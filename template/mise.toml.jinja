@@ -1,8 +1,12 @@
 # mise.toml: toolchain pins and task definitions
 
 [tools]
+{%- if stack == 'python' %}
 python    = "{{ python_version }}"
 uv        = "latest"
+{%- elif stack == 'typescript' %}
+bun       = "latest"
+{%- endif %}
 lefthook  = "latest"
 cocogitto = "latest"
 jq        = "latest"
@@ -10,11 +14,16 @@ jq        = "latest"
 # ─── Bootstrap ──────────────────────────────────────────────────────────────
 
 [tasks.install]
-description = "Install git hooks and dependencies"
+description = "Install git hooks{% if stack != 'none' %} and dependencies{% endif %}"
 run = [
   "lefthook install",
+{%- if stack == 'python' %}
   "uv sync",
+{%- elif stack == 'typescript' %}
+  "bun install",
+{%- endif %}
 ]
+{%- if stack == 'python' %}
 
 # ─── Testing ────────────────────────────────────────────────────────────────
 
@@ -35,6 +44,28 @@ run = [
 [tasks.fmt]
 description = "Auto-format"
 run = "uv run ruff format"
+{%- elif stack == 'typescript' %}
+
+# ─── Testing ────────────────────────────────────────────────────────────────
+
+# `--bun` runs the tools' node scripts on bun, so the project needs no node.
+[tasks.test]
+description = "Run tests"
+run = "bun --bun run vitest run"
+
+# ─── Lint & format ──────────────────────────────────────────────────────────
+
+[tasks.lint]
+description = "Lint, format-check and type-check"
+run = [
+  "bun --bun run biome check",
+  "bun --bun run tsc --noEmit",
+]
+
+[tasks.fmt]
+description = "Auto-format"
+run = "bun --bun run biome format --write"
+{%- endif %}
 
 # ─── Commits ────────────────────────────────────────────────────────────────
 

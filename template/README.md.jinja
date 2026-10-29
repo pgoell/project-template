@@ -7,10 +7,20 @@
 Needs [mise](https://mise.jdx.dev).
 
 ```sh
+{%- if stack == 'python' %}
 mise install      # python, uv, lefthook, cocogitto, jq
 mise run install  # git hooks + dependencies
 mise run test
 mise run lint     # ruff + ty
+{%- elif stack == 'typescript' %}
+mise install      # bun, lefthook, cocogitto, jq
+mise run install  # git hooks + dependencies
+mise run test
+mise run lint     # biome + tsc
+{%- else %}
+mise install      # lefthook, cocogitto, jq
+mise run install  # git hooks
+{%- endif %}
 ```
 
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org); the `commit-msg` hook checks them with cocogitto.
