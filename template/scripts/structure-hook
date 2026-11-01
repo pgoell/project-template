@@ -5,7 +5,11 @@
 # Claude Code PostToolUse hook for Edit, Write and MultiEdit. Reads the hook
 # JSON on stdin and runs check-file-size and check-fan-out, which sit beside
 # this script, on tool_input.file_path. Exit 2 shows their message to Claude;
-# exit 0 says nothing. A file outside a git repo, or ignored by git, passes.
+# exit 0 says nothing. A file outside a git repo, ignored by git, or in a repo
+# with no copy of this hook at the same path (a nested repo the project ignores)
+# passes. A file in another repo or worktree that has a copy meets that repo's
+# baseline and excludes, through this copy's scripts: never run code from the
+# repo of an edited file, which may be a clone nobody has read.
 set -uo pipefail
 
 dir=$(cd "$(dirname "$0")" && pwd)
@@ -17,8 +21,9 @@ elif ! file=$(mise exec -- jq -r '.tool_input.file_path // empty' <<<"$input"); 
   exit 1
 fi
 if [ -z "$file" ] || [ ! -f "$file" ]; then exit 0; fi
+top=$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null) || exit 0
+[ -f "$top/$(git -C "$dir" rev-parse --show-prefix 2>/dev/null)$(basename "$0")" ] || exit 0
 cd "$(dirname "$file")" || exit 0
-git rev-parse --show-toplevel >/dev/null 2>&1 || exit 0
 name=$(basename "$file")
 
 # check-file-size sizes the staged copy. Stage the file into a throwaway copy
