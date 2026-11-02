@@ -36,9 +36,9 @@ for stack in python typescript none; do
       scripts/check-fan-out --all
       actionlint
       shellcheck .github/review/*.sh scripts/*.sh scripts/check-fan-out scripts/check-file-size scripts/structure-hook
-      # The two scripts name their canonical copy, which they must match byte
+      # The three scripts name their canonical copy, which they must match byte
       # for byte.
-      if [ "$context" = work ] && git grep --untracked -niE 'pgoell|pascal' -- . ':!.copier-answers.yml' ':!scripts/check-fan-out' ':!scripts/structure-hook'; then
+      if [ "$context" = work ] && git grep --untracked -niE 'pgoell|pascal' -- . ':!.copier-answers.yml' ':!scripts/check-fan-out' ':!scripts/check-file-size' ':!scripts/structure-hook'; then
         echo "a work render names a person" >&2
         exit 1
       fi
