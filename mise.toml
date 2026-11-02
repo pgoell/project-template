@@ -4,6 +4,7 @@
 uv = "latest"
 actionlint = "latest"
 shellcheck = "latest"
+jq = "latest"
 
 [tasks.test-scripts]
 description = "Test the check scripts and the Claude Code hook in throwaway repos"

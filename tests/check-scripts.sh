@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Tests template/scripts/check-file-size, check-fan-out and structure-hook in
 # throwaway git repos, and tests/check-drift.sh and the shellcheck line of
-# tests/render.sh on planted faults. No network. Needs shellcheck, so run it
-# through mise. The canonical copies and their full tests
+# tests/render.sh on planted faults. No network. Needs shellcheck and jq, so run
+# it through mise: mise run puts the tools of the root mise.toml on PATH, and the
+# hook finds jq there. A shim would not serve it, nor would a project's own config
+# when the hook runs at edit time. The canonical copies and their full tests
 # live in pgoell/pgoell-claude-tools, plugins/structure/.
 # Run from the repo root: mise run test-scripts
 set -uo pipefail
@@ -104,6 +106,12 @@ check "hook: a big file exits 2" "$RC" 2
 mkfile ok.md 10
 hook "$REPO/ok.md"
 check "hook: a small file exits 0" "$RC" 0
+
+# The two tests above pass on a machine with its own jq, whatever the root
+# mise.toml pins, so ask mise without this machine's global config.
+: >"$WORK/global.toml"
+(cd "$TESTS/.." && MISE_GLOBAL_CONFIG_FILE=$WORK/global.toml mise which jq) >/dev/null 2>&1
+check "hook: the root mise.toml gives the tests their jq" "$?" 0
 
 # The fix of #324 in pgoell/pgoell-claude-tools: the hook obeys no config of the
 # edited repo, so core.fsmonitor there runs nothing.
