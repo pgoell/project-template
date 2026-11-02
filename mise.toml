@@ -9,7 +9,11 @@ shellcheck = "latest"
 description = "Test the check scripts and the Claude Code hook in throwaway repos"
 run = "bash tests/check-scripts.sh"
 
+[tasks.test-drift]
+description = "Compare template/scripts with the canonical copies on pgoell-claude-tools master; needs the network"
+run = "bash tests/check-drift.sh"
+
 [tasks.test]
-description = "Test the check scripts, then render the template for each stack and context and check each render"
-depends = ["test-scripts"]
+description = "Test the check scripts, compare them with their canonical copies, then render the template for each stack and context and check each render"
+depends = ["test-scripts", "test-drift"]
 run = "bash tests/render.sh"

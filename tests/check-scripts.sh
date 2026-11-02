@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # Tests template/scripts/check-file-size, check-fan-out and structure-hook in
-# throwaway git repos. No network. The canonical copies and their full tests
+# throwaway git repos, and tests/check-drift.sh and the shellcheck line of
+# tests/render.sh on planted faults. No network. Needs shellcheck, so run it
+# through mise. The canonical copies and their full tests
 # live in pgoell/pgoell-claude-tools, plugins/structure/.
-# Run from the repo root: bash tests/check-scripts.sh
+# Run from the repo root: mise run test-scripts
 set -uo pipefail
 
 SCRIPTS="$(cd "$(dirname "$0")/../template/scripts" && pwd)"
+TESTS="$(cd "$(dirname "$0")" && pwd)"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -101,6 +104,79 @@ check "hook: a big file exits 2" "$RC" 2
 mkfile ok.md 10
 hook "$REPO/ok.md"
 check "hook: a small file exits 0" "$RC" 0
+
+# The fix of #324 in pgoell/pgoell-claude-tools: the hook obeys no config of the
+# edited repo, so core.fsmonitor there runs nothing.
+fresh
+printf '#!/bin/sh\ntouch "%s/pwned"\n' "$REPO" >pwn.sh
+chmod +x pwn.sh
+git config core.fsmonitor "$REPO/pwn.sh"
+mkfile note.md 10
+hook "$REPO/note.md"
+check "hook: core.fsmonitor of the edited repo does not run" "$([ -e pwned ] && echo ran || echo clean)" clean
+
+# Runs the drift test against a canonical folder on disk; sets RC.
+drift() {
+  CANONICAL="file://$1" bash "$TESTS/check-drift.sh" >/dev/null 2>&1
+  RC=$?
+}
+
+CANON="$WORK/canon"
+mkdir "$CANON"
+cp "$SCRIPTS/check-file-size" "$SCRIPTS/check-fan-out" "$SCRIPTS/structure-hook" "$CANON/"
+drift "$CANON"
+check "drift: equal copies pass" "$RC" 0
+for name in check-file-size check-fan-out structure-hook; do
+  echo '# one more line' >>"$CANON/$name"
+  drift "$CANON"
+  check "drift: a changed canonical $name fails" "$RC" 1
+  cp "$SCRIPTS/$name" "$CANON/$name"
+  rm "$CANON/$name"
+  drift "$CANON"
+  check "drift: a canonical $name gone fails" "$RC" 1
+  cp "$SCRIPTS/$name" "$CANON/$name"
+done
+drift "$WORK/nowhere"
+check "drift: no answer from the canonical repo fails" "$RC" 1
+# A copy of the test beside a copy of the scripts, so no real file loses its bit.
+mkdir -p "$WORK/modes/tests" "$WORK/modes/template"
+cp "$TESTS/check-drift.sh" "$WORK/modes/tests/"
+cp -r "$SCRIPTS" "$WORK/modes/template/scripts"
+chmod -x "$WORK/modes/template/scripts/structure-hook"
+CANONICAL="file://$CANON" bash "$WORK/modes/tests/check-drift.sh" >/dev/null 2>&1
+check "drift: a copy that lost its executable bit fails" "$?" 1
+
+# A server that takes the connection and never answers.
+python3 -c 'import socket,time; s=socket.socket(); s.bind(("127.0.0.1",0)); s.listen(); print(s.getsockname()[1],flush=True); time.sleep(30)' >"$WORK/port" &
+stall=$!
+until [ -s "$WORK/port" ]; do sleep 0.1; done
+CANONICAL="http://127.0.0.1:$(cat "$WORK/port")" DRIFT_SECONDS=1 timeout 15 bash "$TESTS/check-drift.sh" >/dev/null 2>&1
+check "drift: a server that never answers fails in time" "$?" 1
+kill "$stall"
+
+# The excludes in a generated project can make the checks slow, as
+# references/ci.md in the canonical repo says, so the Lint job has a limit.
+check "ci: the Lint job sets timeout-minutes" "$(sed -n '/^  lint:$/,/^    steps:$/p' "$TESTS/../template/.github/workflows/ci.yml.jinja" | grep -c '^    timeout-minutes: ')" 1
+
+# Runs the shellcheck line of tests/render.sh in a folder laid out like a render,
+# with a fault planted in scripts/$1 (none when $1 is empty); sets RC.
+line=$(grep -E '^ *shellcheck ' "$TESTS/render.sh" | sed 's/^ *//')
+lint() {
+  fresh
+  mkdir -p .github/review
+  printf '#!/bin/sh\necho ok\n' >.github/review/a.sh
+  printf '#!/bin/sh\necho ok\n' >scripts/a.sh
+  printf '#!/bin/sh\necho ok\n' | tee scripts/check-file-size scripts/check-fan-out scripts/structure-hook >/dev/null
+  if [ -n "$1" ]; then printf 'echo $1 $2\n' >>"scripts/$1"; fi
+  eval "$line" >/dev/null 2>&1
+  RC=$?
+}
+lint ''
+check "shellcheck: clean scripts pass" "$RC" 0
+for name in check-file-size check-fan-out structure-hook a.sh; do
+  lint "$name"
+  check "shellcheck: a fault in $name fails" "$RC" 1
+done
 
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

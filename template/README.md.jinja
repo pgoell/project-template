@@ -23,4 +23,6 @@ mise run install  # git hooks
 {%- endif %}
 ```
 
+The Claude Code hook in `.claude/settings.json` needs `jq` on `PATH` or in mise's global config (`mise use -g jq`): it reads no project's mise config, so the `jq` above does not serve it.
+
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org); the `commit-msg` hook checks them with cocogitto.
