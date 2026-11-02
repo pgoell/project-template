@@ -1,0 +1,9 @@
+#include "project.hpp"
+
+namespace {{ project_name | replace('-', '_') }} {
+
+std::string_view name() {
+  return "{{ project_name }}";
+}
+
+}  // namespace {{ project_name | replace('-', '_') }}

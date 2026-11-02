@@ -1,0 +1,8 @@
+#include <iostream>
+
+#include "project.hpp"
+
+int main() {
+  std::cout << {{ project_name | replace('-', '_') }}::name() << '\n';
+  return 0;
+}

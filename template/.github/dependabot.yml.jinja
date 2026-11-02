@@ -1,6 +1,6 @@
 version: 2
 updates:
-{%- if stack != 'none' %}
+{%- if stack in ['python', 'typescript'] %}
   - package-ecosystem: {{ 'uv' if stack == 'python' else 'bun' }}
     directory: /
     schedule:

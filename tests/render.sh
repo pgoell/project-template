@@ -12,7 +12,7 @@ src=$(mktemp -d)
 git ls-files -coz --exclude-standard | tar --null -T - -c | tar -x -C "$src"
 work=$(mktemp -d)
 
-for stack in python typescript none; do
+for stack in python typescript cpp none; do
   for context in personal work; do
     out=$work/$stack-$context
     echo "=== $stack, $context"

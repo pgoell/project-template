@@ -4,6 +4,8 @@ description: >
   Bootstraps mise (Python, uv, lefthook, cocogitto) and primes the uv cache.
 {%- elif stack == 'typescript' %}
   Bootstraps mise (bun, lefthook, cocogitto) and installs the dependencies.
+{%- elif stack == 'cpp' %}
+  Bootstraps mise (CMake, Ninja, clang-format, clang-tidy, lefthook, cocogitto).
 {%- else %}
   Bootstraps mise (lefthook, cocogitto, jq).
 {%- endif %}

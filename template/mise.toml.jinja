@@ -6,6 +6,14 @@ python    = "{{ python_version }}"
 uv        = "latest"
 {%- elif stack == 'typescript' %}
 bun       = "latest"
+{%- elif stack == 'cpp' %}
+cmake     = "latest"
+ninja     = "latest"
+# uv runs the pipx backend. clang-format and clang-tidy stay on one major
+# version, so a new release does not reformat the code or add findings.
+uv        = "latest"
+"pipx:clang-format" = "23"
+"pipx:clang-tidy"   = "23"
 {%- endif %}
 lefthook  = "latest"
 cocogitto = "latest"
@@ -21,6 +29,8 @@ run = [
   "uv sync",
 {%- elif stack == 'typescript' %}
   "bun install",
+{%- elif stack == 'cpp' %}
+  "cmake --preset dev",
 {%- endif %}
 ]
 {%- if stack == 'python' %}
@@ -65,6 +75,37 @@ run = [
 [tasks.fmt]
 description = "Auto-format"
 run = "bun --bun run biome format --write"
+{%- elif stack == 'cpp' %}
+
+# ─── Build & test ───────────────────────────────────────────────────────────
+
+# The dev preset builds Debug with AddressSanitizer and UndefinedBehaviorSanitizer.
+[tasks.build]
+description = "Configure and build the dev preset"
+run = [
+  "cmake --preset dev",
+  "cmake --build --preset dev",
+]
+
+[tasks.test]
+description = "Run tests under the sanitizers"
+depends = ["build"]
+run = "ctest --preset dev"
+
+# ─── Lint & format ──────────────────────────────────────────────────────────
+
+# clang-tidy reads build/dev/compile_commands.json, which the configure writes.
+[tasks.lint]
+description = "Format-check and clang-tidy"
+run = [
+  "git ls-files -z -co --exclude-standard '*.cpp' '*.hpp' | xargs -0 -r clang-format --dry-run --Werror",
+  "cmake --preset dev",
+  "git ls-files -z -co --exclude-standard '*.cpp' | xargs -0 -r clang-tidy -p build/dev --quiet",
+]
+
+[tasks.fmt]
+description = "Auto-format"
+run = "git ls-files -z -co --exclude-standard '*.cpp' '*.hpp' | xargs -0 -r clang-format -i"
 {%- endif %}
 
 # ─── Commits ────────────────────────────────────────────────────────────────
