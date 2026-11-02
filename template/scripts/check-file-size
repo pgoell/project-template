@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Canonical copy: plugins/structure/skills/setting-up-the-checks/assets/check-file-size
+# in pgoell/pgoell-claude-tools. Every other copy stays byte-identical to it.
+#
 # Fail when an authored file passes 5000 tokens (bytes/4); checks the given
 # paths, or every tracked file.
 set -euo pipefail
