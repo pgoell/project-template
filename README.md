@@ -56,7 +56,7 @@ Agents push as a separate GitHub account, not as you: invite it as a collaborato
 | `.github/*.json`, `scripts/` | repo settings, branch protection (code owner reviews), Actions allowlist, required SHA pins, fork PR approval, vulnerability alerts and Dependabot security updates, applied with `gh` |
 | `scripts/check-file-size` | fails on any authored file over 5000 tokens (bytes/4); add exclude globs in `.file-size-excludes` |
 | `scripts/check-fan-out` | fails on any folder with more than 7 entries; `--all` checks every folder, `--update-baseline` only lowers `.fan-out-baseline`; skip folders in `.fan-out-excludes` |
-| `scripts/structure-hook`, `.claude/settings.json` | Claude Code `PostToolUse` hook: runs both checks on each edited file |
+| `scripts/structure-hook`, `.claude/settings.json` | Claude Code `PostToolUse` hook: runs both checks on each edited file; needs `jq` on `PATH` or in mise's global config (`mise use -g jq`), since it reads no project's mise config |
 | `.claude/CLAUDE.md` | project instructions for Claude Code |
 
 ## Update a generated project
@@ -69,5 +69,7 @@ uvx copier update
 ## Develop the template
 
 ```sh
-mise run test   # renders every stack and context into a temp dir, then runs lint, tests, actionlint and shellcheck there
+mise run test   # tests the check scripts, compares them with their canonical copies, renders every stack and context into a temp dir, then runs lint, tests, actionlint and shellcheck there
 ```
+
+`scripts/check-fan-out`, `check-file-size` and `structure-hook` are copies: their canonical source is `plugins/structure/skills/setting-up-the-checks/assets/` in [pgoell-claude-tools](https://github.com/pgoell/pgoell-claude-tools). `mise run test` fetches that folder from its master and fails when a copy differs or the fetch fails, so it needs the network. Fix a script there first, then copy its bytes here. The `pre-commit` and `pre-push` scripts there stay out: lefthook does their work here.
