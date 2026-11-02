@@ -146,6 +146,18 @@ chmod -x "$WORK/modes/template/scripts/structure-hook"
 CANONICAL="file://$CANON" bash "$WORK/modes/tests/check-drift.sh" >/dev/null 2>&1
 check "drift: a copy that lost its executable bit fails" "$?" 1
 
+# A server that takes the connection and never answers.
+python3 -c 'import socket,time; s=socket.socket(); s.bind(("127.0.0.1",0)); s.listen(); print(s.getsockname()[1],flush=True); time.sleep(30)' >"$WORK/port" &
+stall=$!
+until [ -s "$WORK/port" ]; do sleep 0.1; done
+CANONICAL="http://127.0.0.1:$(cat "$WORK/port")" DRIFT_SECONDS=1 timeout 15 bash "$TESTS/check-drift.sh" >/dev/null 2>&1
+check "drift: a server that never answers fails in time" "$?" 1
+kill "$stall"
+
+# The excludes in a generated project can make the checks slow, as
+# references/ci.md in the canonical repo says, so the Lint job has a limit.
+check "ci: the Lint job sets timeout-minutes" "$(sed -n '/^  lint:$/,/^    steps:$/p' "$TESTS/../template/.github/workflows/ci.yml.jinja" | grep -c '^    timeout-minutes: ')" 1
+
 # Runs the shellcheck line of tests/render.sh in a folder laid out like a render,
 # with a fault planted in scripts/$1 (none when $1 is empty); sets RC.
 line=$(grep -E '^ *shellcheck ' "$TESTS/render.sh" | sed 's/^ *//')
