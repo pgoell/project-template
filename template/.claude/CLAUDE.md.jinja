@@ -7,6 +7,10 @@
 {% if stack == 'python' %}
 - `src/{{ package_name }}/`: the package
 - `tests/`: pytest
+{%- elif stack == 'cpp' %}
+- `src/`: the library (`project.hpp`, `project.cpp`) and the executable (`main.cpp`)
+- `tests/`: GoogleTest, run by ctest
+- `CMakePresets.json`: `dev` (Debug, AddressSanitizer and UndefinedBehaviorSanitizer, the default for every task) and `release`
 {%- else %}
 - `src/`: the code, entry point `src/index.ts`
 - `tests/`: vitest
@@ -26,6 +30,11 @@ mise run fmt            # ruff format
 mise run test           # vitest
 mise run lint           # biome check, tsc --noEmit
 mise run fmt            # biome format
+{%- elif stack == 'cpp' %}
+mise run build          # configure and build the dev preset
+mise run test           # build, then ctest under the sanitizers
+mise run lint           # clang-format --dry-run, clang-tidy
+mise run fmt            # clang-format -i
 {%- endif %}
 mise run check-commits  # cocogitto on unpushed commits
 ```
@@ -37,6 +46,10 @@ mise run check-commits  # cocogitto on unpushed commits
 - A package exports its public names through `__init__.py` and `__all__`. Other modules import those names and reach no deeper.
 {%- elif stack == 'typescript' %}
 - A module exports its public names from one entry file. Other modules import those names and reach no deeper.
+{%- elif stack == 'cpp' %}
+- A module's public names live in one header. Other modules include that header and reach no deeper.
+- Modern C++20: RAII, `std::unique_ptr` over `new`, no raw owning pointers. A sanitizer finding is a bug, never noise.
+- `.clang-tidy` turns every finding into an error. Turn a check off there, with the reason, not with `NOLINT` in the code.
 {%- endif %}
 - At most about 7 entries per folder; above that, group by concept into a subfolder with one entry point. `scripts/check-fan-out` enforces it, with `.fan-out-baseline` for accepted overages and `.fan-out-excludes` for folders that are lists by design.
 - No file passes 5000 tokens (bytes/4); `scripts/check-file-size` enforces it. A Claude Code hook in `.claude/settings.json` runs both checks on each edit. The hook needs `jq` on `PATH` or in mise's global config (`mise use -g jq`), since it reads no project's mise config.

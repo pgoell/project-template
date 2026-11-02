@@ -1,12 +1,12 @@
 # project-template
 
-[Copier](https://copier.readthedocs.io) template for a project in the setup I use everywhere: mise, lefthook, cocogitto, and GitHub CI with a Claude review on every pull request. The code can be Python, TypeScript, or none at all (docs, decks).
+[Copier](https://copier.readthedocs.io) template for a project in the setup I use everywhere: mise, lefthook, cocogitto, and GitHub CI with a Claude review on every pull request. The code can be Python, TypeScript, C++, or none at all (docs, decks).
 
 ## Questions
 
 | Question | Choices | Does |
 |---|---|---|
-| `stack` | `python` (default), `typescript`, `none` | python: uv, ruff, ty, pytest. typescript: bun, biome, tsc, vitest, with the same mise task names. none: no code and no Test job; the review runs after Lint. |
+| `stack` | `python` (default), `typescript`, `cpp`, `none` | python: uv, ruff, ty, pytest. typescript: bun, biome, tsc, vitest. cpp: CMake, Ninja, clang-format, clang-tidy, GoogleTest, and a Debug build under AddressSanitizer and UndefinedBehaviorSanitizer; the compiler comes from the system. All three share the mise task names. none: no code and no Test job; the review runs after Lint. |
 | `context` | `personal` (default), `work` | work leaves out every personal default (author, approver). |
 | `approvers` | GitHub logins, space-separated | own the risky paths in `.github/CODEOWNERS`, and their comments reach the reviewer. Defaults to `pgoell` for personal; work must name them. |
 
@@ -45,6 +45,7 @@ Agents push as a separate GitHub account, not as you: invite it as a collaborato
 | `mise.toml` | tool pins; `install`, `test`, `lint`, `fmt`, `check-commits`, `repo:*` tasks (none has no `test`, `lint` or `fmt`) |
 | `pyproject.toml` (python) | uv package in `src/`, dev group pytest, ruff (with complexity limits and no relative imports), ty |
 | `package.json`, `tsconfig.json`, `biome.json` (typescript) | bun package in `src/`, strict tsc, biome with a complexity limit, vitest |
+| `CMakeLists.txt`, `CMakePresets.json`, `.clang-format`, `.clang-tidy` (cpp) | C++20 library and executable in `src/`, warnings as errors, GoogleTest pinned by hash, `dev` preset with sanitizers, clang-tidy with a complexity limit |
 | `.config/lefthook.yaml` | commit-msg: cog; pre-commit: lint, file size, fan-out; pre-push: test, commits, file size, fan-out |
 | `cog.toml` | Conventional Commits check |
 | `.github/workflows/ci.yml` | Lint (with file size and fan-out), Test, Commits, Review and Security jobs, every action pinned to a commit SHA |
@@ -52,7 +53,7 @@ Agents push as a separate GitHub account, not as you: invite it as a collaborato
 | `.github/CODEOWNERS` | the risky paths and who must review them |
 | `.github/pull_request_template.md` | What and why, Testing, Risk, How to revert |
 | `.github/workflows/pr-title.yml` | PR title must be a conventional commit |
-| `.github/dependabot.yml` | weekly uv or bun, and Actions updates |
+| `.github/dependabot.yml` | weekly uv or bun, and Actions updates (cpp: Actions only, since Dependabot does not read CMake) |
 | `.github/*.json`, `scripts/` | repo settings, branch protection (code owner reviews), Actions allowlist, required SHA pins, fork PR approval, vulnerability alerts and Dependabot security updates, applied with `gh` |
 | `scripts/check-file-size` | fails on any authored file over 5000 tokens (bytes/4); add exclude globs in `.file-size-excludes` |
 | `scripts/check-fan-out` | fails on any folder with more than 7 entries; `--all` checks every folder, `--update-baseline` only lowers `.fan-out-baseline`; skip folders in `.fan-out-excludes` |

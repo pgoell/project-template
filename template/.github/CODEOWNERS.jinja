@@ -33,4 +33,11 @@ uv.lock {{ owners }}
 # Manifest and lock
 package.json {{ owners }}
 bun.lock {{ owners }}
+{%- elif stack == 'cpp' %}
+
+# Build files, which pin the dependencies, and the lint rules
+CMakeLists.txt {{ owners }}
+CMakePresets.json {{ owners }}
+/cmake/ {{ owners }}
+/.clang-tidy {{ owners }}
 {%- endif %}

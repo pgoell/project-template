@@ -1,5 +1,5 @@
 # Copier template: a project on mise, lefthook, cocogitto and GitHub CI with a
-# Claude review, in Python, TypeScript, or neither.
+# Claude review, in Python, TypeScript, C++, or none of them.
 _subdirectory: template
 _templates_suffix: .jinja
 
@@ -15,8 +15,8 @@ description:
 
 stack:
   type: str
-  help: "Language: python (uv, ruff, ty, pytest), typescript (bun, biome, tsc, vitest) or none (docs, decks: no Test job)"
-  choices: [python, typescript, none]
+  help: "Language: python (uv, ruff, ty, pytest), typescript (bun, biome, tsc, vitest), cpp (CMake, Ninja, clang-format, clang-tidy, GoogleTest, sanitizers) or none (docs, decks: no Test job)"
+  choices: [python, typescript, cpp, none]
   default: python
 
 context:
