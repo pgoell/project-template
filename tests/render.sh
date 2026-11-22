@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Renders the template once per stack and context, and runs each render's
-# lint and tests, the checks on its workflows and scripts, and, for work, a
-# search for personal names.
+# lint and tests, the checks on its workflows and scripts, the comment check,
+# and, for work, a search for personal names.
 # Run from the repo root: bash tests/render.sh
 set -euo pipefail
 
@@ -31,6 +31,9 @@ for stack in python typescript cpp none; do
       if [ "$stack" != none ]; then
         mise run lint
         mise run test
+        # No origin yet, so it checks every line the render wrote.
+        git -c user.name=render -c user.email=render@example.com commit -qm "chore: render" --no-verify
+        mise exec -- scripts/check-comments origin/master
       fi
       scripts/check-file-size
       scripts/check-fan-out --all
