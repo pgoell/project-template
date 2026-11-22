@@ -48,13 +48,12 @@ A fresh render checks a change with lint, the tests and the Claude review. Two f
 2. "Security model": who may reach what, and where secrets live.
 3. "Checks by trigger" starts empty. Each time a bug gets past review, add a row: what in the diff should have raised the question, what to check, and the pull request it comes from. The reviewer checks only the rows whose trigger a diff matches.
 
-Both files sit under paths in `.github/CODEOWNERS`, so a pull request that changes them waits for a code owner.
-
 ## Review and merge
 
 - `Review` and `Security` run `anthropics/claude-code-action` after Lint and Test pass, on pull requests from a branch of this repo that are not drafts and not from Dependabot. They post each Important finding as a thread, which must be answered before the merge, and put Design (at most 3), Pre-existing and Nit findings in a summary. Round 1 reads the whole pull request, later rounds only the new commits. The rounds have no limit.
+- A draft, a fork's pull request or a Dependabot pull request passes `Review` and `Security` with no round. A code owner reads a fork's or Dependabot's pull request by hand.
 - The review reads `REVIEW.md` and `.github/review/` from the base branch, so a pull request cannot loosen the review that judges it; a change to them counts from the next pull request on. The workflow file itself still comes from the pull request, which GitHub does for every `pull_request` run; the code owner review guards it.
-- A pull request that touches a path in `.github/CODEOWNERS` (CI, settings, scripts, agent settings, deploy and container files, migrations, the manifest and lock) needs a review from a code owner. GitHub reads that file from the base branch, so a pull request cannot take its own paths off the list. A push dismisses the review.
+- A pull request that touches a path in `.github/CODEOWNERS` (CI, settings, scripts, the review guide, agent settings, deploy and container files, migrations, the manifest and lock) needs a review from a code owner. GitHub reads that file from the base branch, so a pull request cannot take its own paths off the list. A push dismisses the review.
 - Branch protection does not bind admins, so the owner merges a risky pull request of their own with `gh pr merge --admin`. Nobody else can.
 - `python3 .github/review/outcomes.py [days] [sample size]` counts how the Important threads were answered, the rounds each pull request took, and picks pull requests with Design points for you to read.
 
@@ -63,15 +62,13 @@ Both files sit under paths in `.github/CODEOWNERS`, so a pull request that chang
 | File | Does |
 |---|---|
 | `mise.toml` | tool pins; `install`, `test`, `lint`, `fmt`, `check-commits`, `repo:*` tasks (none has no `test`, `lint` or `fmt`) |
-| `pyproject.toml` (python) | uv package in `src/`, dev group pytest, ruff (with complexity limits and no relative imports), ty |
-| `package.json`, `tsconfig.json`, `biome.json` (typescript) | bun package in `src/`, strict tsc, biome with a complexity limit, vitest |
-| `CMakeLists.txt`, `CMakePresets.json`, `.clang-format`, `.clang-tidy` (cpp) | C++20 library and executable in `src/`, warnings as errors, GoogleTest pinned by hash, `dev` preset with sanitizers, clang-tidy with a complexity limit |
+| `pyproject.toml` (python) | package in `src/`; ruff with complexity limits and no relative imports |
+| `package.json`, `tsconfig.json`, `biome.json` (typescript) | package in `src/`; strict tsc; biome with a complexity limit |
+| `CMakeLists.txt`, `CMakePresets.json`, `.clang-format`, `.clang-tidy` (cpp) | C++20 library and executable in `src/`, warnings as errors, GoogleTest pinned by hash, clang-tidy with a complexity limit |
 | `.config/lefthook.yaml` | commit-msg: cog; pre-commit: lint, file size, fan-out, comments; pre-push: test, commits, file size, fan-out, comments (none has no lint, test or comments) |
 | `cog.toml` | Conventional Commits check |
 | `.github/workflows/ci.yml` | Lint (with file size, fan-out and comments), Test, Commits, Review and Security jobs, every action pinned to a commit SHA |
-| `.claude/skills/verify/SKILL.md` | how an agent runs a change in the real app before a commit, to fill in |
-| `.github/review/`, `REVIEW.md` | the review prompts and scripts, the outcomes report, and what the reviewer looks for |
-| `.github/CODEOWNERS` | the risky paths and who must review them |
+| `.github/review/` | the review prompts and scripts, and the outcomes report |
 | `.github/pull_request_template.md` | What and why, Changes, Decisions, Testing, Risk, How to revert |
 | `.github/ISSUE_TEMPLATE/task.md` | What and why, Out of scope, Done when |
 | `.github/workflows/pr-title.yml` | PR title must be a conventional commit |
@@ -81,7 +78,6 @@ Both files sit under paths in `.github/CODEOWNERS`, so a pull request that chang
 | `scripts/check-fan-out` | fails on any folder with more than 7 entries; `--all` checks every folder, `--update-baseline` only lowers `.fan-out-baseline`; skip folders in `.fan-out-excludes` |
 | `scripts/check-comments` (not none) | fails on a comment that a change adds to Python, TypeScript, JavaScript, C or C++; lets through license headers, tool directives, doc comments and comments that link their source; skip paths in `.comments-excludes`. The [pstack](https://github.com/cursor/plugins/tree/main/pstack) `no-comments` rule, as a check |
 | `scripts/structure-hook`, `.claude/settings.json` | Claude Code `PostToolUse` hook: runs the file size and fan-out checks on each edited file; needs `jq` on `PATH` or in mise's global config (`mise use -g jq`) |
-| `.claude/CLAUDE.md` | project instructions for Claude Code |
 
 ## Update a generated project
 

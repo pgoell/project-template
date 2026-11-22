@@ -196,6 +196,7 @@ check "drift: a server that never answers fails in time" "$?" 1
 kill "$stall"
 
 check "ci: the Lint job sets timeout-minutes" "$(sed -n '/^  lint:$/,/^    steps:$/p' "$CI" | grep -c '^    timeout-minutes: ')" 1
+check "ci: a draft marked ready starts a run, so it gets the reviews it skipped" "$(grep -c '^    types: \[opened, synchronize, reopened, ready_for_review\]$' "$CI")" 1
 check "ci: no workflow runs on pull_request_target, where a fork would meet the secrets" "$(cat "$TESTS"/../template/.github/workflows/* | grep -c pull_request_target)" 0
 check "ci: the review checkout keeps no credentials" "$(grep -c '^          persist-credentials: false$' "$CI")" 1
 check "ci: the reviewer's commands run without the tokens" "$(grep -c '^          CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: 1$' "$CI")" 1
