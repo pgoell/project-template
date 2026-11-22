@@ -1,9 +1,3 @@
-# Normalize a GitHub branch-protection JSON document so a PUT payload and the
-# response from GET /repos/:owner/:repo/branches/:branch/protection can be
-# diffed for drift detection.
-#
-# Invoked as:  jq -S -f scripts/lib/normalize-branch-protection.jq <file>
-
 # Drop URL fields GitHub adds on GET but that are absent on PUT.
 del(.url)
 | walk(if type == "object" and has("url") then del(.url) else . end)
@@ -36,8 +30,6 @@ del(.url)
 | (if .required_status_checks.contexts?
      then .required_status_checks.contexts |= sort
      else . end)
-
-# Unwrap enforce_admins: GET returns {"enabled": bool}, PUT takes a bare bool.
 | (if .enforce_admins? | type == "object"
      then .enforce_admins = .enforce_admins.enabled
      else . end)

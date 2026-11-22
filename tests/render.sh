@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# Renders the template once per stack and context, and runs each render's
-# lint and tests, the checks on its workflows and scripts, the comment check,
-# and, for work, a search for personal names.
-# Run from the repo root: bash tests/render.sh
 set -euo pipefail
 
 # Render from a copy of the working tree, not from the repo: copier 9.19
@@ -31,7 +27,6 @@ for stack in python typescript cpp none; do
       if [ "$stack" != none ]; then
         mise run lint
         mise run test
-        # No origin yet, so it checks every line the render wrote.
         git -c user.name=render -c user.email=render@example.com commit -qm "chore: render" --no-verify
         mise exec -- scripts/check-comments origin/master
       fi
@@ -40,8 +35,6 @@ for stack in python typescript cpp none; do
       scripts/check-fan-out --all
       actionlint
       shellcheck .github/review/*.sh scripts/*.sh scripts/check-fan-out scripts/check-file-size scripts/structure-hook
-      # The three scripts name their canonical copy, which they must match byte
-      # for byte.
       if [ "$context" = work ] && git grep --untracked -niE 'pgoell|pascal' -- . ':!.copier-answers.yml' ':!scripts/check-fan-out' ':!scripts/check-file-size' ':!scripts/structure-hook'; then
         echo "a work render names a person" >&2
         exit 1

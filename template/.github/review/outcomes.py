@@ -1,12 +1,6 @@
 """How the CI review's findings were answered, for pull requests merged lately.
 
-Counts each Important thread by the first word of the author's answer (Fixed,
-Rejected, Intentional, Didn't matter), the rounds each pull request took, and
-picks pull requests whose summaries held Design points for a person to read. An
-agent author fixes whatever it is told, so the answers alone do not show a
-finding was worth making; the sample is where a person judges that.
-
-    python3 .github/review/outcomes.py [days] [sample size]
+Usage: python3 .github/review/outcomes.py [days] [sample size]
 """
 
 import json
@@ -36,13 +30,11 @@ query($owner: String!, $name: String!, $n: Int!) {
 
 
 def gh(*args: str) -> str:
-    """Run gh with these arguments and return what it prints."""
     run = subprocess.run(["gh", *args], check=True, capture_output=True, text=True)
     return run.stdout
 
 
 def answer(replies: list[dict]) -> str:
-    """Name the author's answer by its first word, or say there is none."""
     for reply in replies:
         if reply["author"]["login"] != BOT:
             first = reply["body"].strip().lower()
@@ -51,7 +43,6 @@ def answer(replies: list[dict]) -> str:
 
 
 def main() -> None:
-    """Print the counts and the sample."""
     given = [int(a) for a in sys.argv[1:3]]
     days, size = given + [DAYS, SAMPLE][len(given) :]
     since = (datetime.now(UTC) - timedelta(days=days)).date().isoformat()

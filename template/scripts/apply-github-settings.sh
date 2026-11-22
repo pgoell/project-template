@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Apply GitHub repo + branch-protection settings from .github/*.json, and turn
-# on vulnerability alerts and Dependabot security updates.
-#
 # Reading branch protection (used by --check and the post-apply verify) requires
 # a token with the "Administration" (read) permission. A local `gh auth login`
 # with the `repo` scope has it; the Actions GITHUB_TOKEN does not, so the
@@ -56,7 +53,6 @@ if (( DRY_RUN + SKIP_VERIFY + CHECK > 1 )); then
   exit 2
 fi
 
-# --- Preflight ----------------------------------------------------------------
 command -v gh >/dev/null || { echo "gh is required; install https://cli.github.com/" >&2; exit 2; }
 command -v jq >/dev/null || { echo "jq is required" >&2; exit 2; }
 gh auth status >/dev/null 2>&1 || {
@@ -64,7 +60,6 @@ gh auth status >/dev/null 2>&1 || {
   exit 3
 }
 
-# --- Resolve repo -------------------------------------------------------------
 REPO_INFO=$(gh repo view --json nameWithOwner,defaultBranchRef \
   --jq '.nameWithOwner + " " + .defaultBranchRef.name' 2>/dev/null) || {
   echo "could not resolve current repo via 'gh repo view'; is this a GitHub repo clone?" >&2
@@ -80,7 +75,6 @@ SELECTED_ACTIONS=.github/selected-actions.json
 
 echo "target: $OWNER_REPO (branch: $DEFAULT_BRANCH)"
 
-# --- Verifier ----------------------------------------------------------------
 verify_branch_protection() {
   echo "→ verifying branch protection"
   local actual_raw actual_norm expected_norm
@@ -128,13 +122,11 @@ verify() {
   return $rc
 }
 
-# --- Check-only path ----------------------------------------------------------
 if [[ "$CHECK" == "1" ]]; then
   verify
   exit $?
 fi
 
-# --- Apply or describe --------------------------------------------------------
 if [[ "$DRY_RUN" == "1" ]]; then
   echo "→ would run: gh api --method PATCH /repos/$OWNER_REPO --input $REPO_SETTINGS"
   echo "→ would run: gh api --method PUT  /repos/$OWNER_REPO/vulnerability-alerts"

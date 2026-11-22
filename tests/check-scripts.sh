@@ -1,16 +1,9 @@
 #!/usr/bin/env bash
-# Tests template/scripts/check-file-size, check-fan-out and structure-hook in
-# throwaway git repos, and tests/check-drift.sh and the shellcheck line of
-# tests/render.sh on planted faults. No network. Needs shellcheck and jq, so run
-# it through mise: mise run puts the tools of the root mise.toml on PATH, and the
-# hook finds jq there. A shim would not serve it, nor would a project's own config
-# when the hook runs at edit time. The canonical copies and their full tests
-# live in pgoell/pgoell-claude-tools, plugins/structure/.
-# Run from the repo root: mise run test-scripts
 set -uo pipefail
 
 SCRIPTS="$(cd "$(dirname "$0")/../template/scripts" && pwd)"
 TESTS="$(cd "$(dirname "$0")" && pwd)"
+CI="$TESTS/../template/.github/workflows/ci.yml.jinja"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -26,13 +19,11 @@ check() {
   fi
 }
 
-# Writes a file of $2 bytes at path $1, creating its folders.
 mkfile() {
   mkdir -p "$(dirname "$1")"
   head -c "$2" /dev/zero | tr '\0' a >"$1"
 }
 
-# Makes a fresh repo in $REPO with the scripts in scripts/.
 n=0
 fresh() {
   n=$((n + 1))
@@ -45,7 +36,6 @@ fresh() {
   git config user.name test
 }
 
-# Runs scripts/$1 with the other arguments; sets RC.
 run() {
   local s=$1
   shift
@@ -56,14 +46,12 @@ run() {
   RC=$?
 }
 
-# Feeds the hook a Write event for path $1; sets RC.
 hook() {
   printf '{"tool_name":"Write","tool_input":{"file_path":"%s"}}' "$1" |
     bash scripts/structure-hook >/dev/null 2>&1
   RC=$?
 }
 
-# Writes files a1 to aN in folder $2.
 files() { for i in $(seq 1 "$1"); do mkfile "$2/a$i" 1; done; }
 
 fresh
@@ -112,23 +100,18 @@ mkfile ok.md 10
 hook "$REPO/ok.md"
 check "hook: a small file exits 0" "$RC" 0
 
-# The two tests above pass on a machine with its own jq, whatever the root
-# mise.toml pins, so ask mise without this machine's global config.
 : >"$WORK/global.toml"
 (cd "$TESTS/.." && MISE_GLOBAL_CONFIG_FILE=$WORK/global.toml mise which jq) >/dev/null 2>&1
 check "hook: the root mise.toml gives the tests their jq" "$?" 0
 
-# The fix of #324 in pgoell/pgoell-claude-tools: the hook obeys no config of the
-# edited repo, so core.fsmonitor there runs nothing.
 fresh
 printf '#!/bin/sh\ntouch "%s/pwned"\n' "$REPO" >pwn.sh
 chmod +x pwn.sh
 git config core.fsmonitor "$REPO/pwn.sh"
 mkfile note.md 10
 hook "$REPO/note.md"
-check "hook: core.fsmonitor of the edited repo does not run" "$([ -e pwned ] && echo ran || echo clean)" clean
+check "hook: core.fsmonitor of the edited repo does not run (pgoell/pgoell-claude-tools#324)" "$([ -e pwned ] && echo ran || echo clean)" clean
 
-# Stages $2 as file $1 and runs check-comments on the index; sets RC.
 staged() {
   mkdir -p "$(dirname "$1")"
   printf '%s\n' "$2" >"$1"
@@ -176,7 +159,6 @@ printf '%s\n' '# generated' 'a.py' >.comments-excludes
 run check-comments base
 check "comments: an excluded path passes" "$RC" 0
 
-# Runs the drift test against a canonical folder on disk; sets RC.
 drift() {
   CANONICAL="file://$1" bash "$TESTS/check-drift.sh" >/dev/null 2>&1
   RC=$?
@@ -199,7 +181,6 @@ for name in check-file-size check-fan-out structure-hook; do
 done
 drift "$WORK/nowhere"
 check "drift: no answer from the canonical repo fails" "$RC" 1
-# A copy of the test beside a copy of the scripts, so no real file loses its bit.
 mkdir -p "$WORK/modes/tests" "$WORK/modes/template"
 cp "$TESTS/check-drift.sh" "$WORK/modes/tests/"
 cp -r "$SCRIPTS" "$WORK/modes/template/scripts"
@@ -207,7 +188,6 @@ chmod -x "$WORK/modes/template/scripts/structure-hook"
 CANONICAL="file://$CANON" bash "$WORK/modes/tests/check-drift.sh" >/dev/null 2>&1
 check "drift: a copy that lost its executable bit fails" "$?" 1
 
-# A server that takes the connection and never answers.
 python3 -c 'import socket,time; s=socket.socket(); s.bind(("127.0.0.1",0)); s.listen(); print(s.getsockname()[1],flush=True); time.sleep(30)' >"$WORK/port" &
 stall=$!
 until [ -s "$WORK/port" ]; do sleep 0.1; done
@@ -215,12 +195,13 @@ CANONICAL="http://127.0.0.1:$(cat "$WORK/port")" DRIFT_SECONDS=1 timeout 15 bash
 check "drift: a server that never answers fails in time" "$?" 1
 kill "$stall"
 
-# The excludes in a generated project can make the checks slow, as
-# references/ci.md in the canonical repo says, so the Lint job has a limit.
-check "ci: the Lint job sets timeout-minutes" "$(sed -n '/^  lint:$/,/^    steps:$/p' "$TESTS/../template/.github/workflows/ci.yml.jinja" | grep -c '^    timeout-minutes: ')" 1
+check "ci: the Lint job sets timeout-minutes" "$(sed -n '/^  lint:$/,/^    steps:$/p' "$CI" | grep -c '^    timeout-minutes: ')" 1
+check "ci: no workflow runs on pull_request_target, where a fork would meet the secrets" "$(cat "$TESTS"/../template/.github/workflows/* | grep -c pull_request_target)" 0
+check "ci: the review checkout keeps no credentials" "$(grep -c '^          persist-credentials: false$' "$CI")" 1
+check "ci: the reviewer's commands run without the tokens" "$(grep -c '^          CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: 1$' "$CI")" 1
+check "ci: the reviewer may not read .git, which holds a token" "$(grep -cF -- '--disallowedTools "Read(./.git/**)"' "$CI")" 1
+check "ci: the reviewer's tools are the fixed list" "$(grep -cF -- '--allowedTools "Read(./**),Write(./.review/summary.md),Edit(./.review/summary.md),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git grep:*),Bash(git ls-files:*),mcp__github_inline_comment__create_inline_comment"' "$CI")" 1
 
-# Runs the shellcheck line of tests/render.sh in a folder laid out like a render,
-# with a fault planted in scripts/$1 (none when $1 is empty); sets RC.
 line=$(grep -E '^ *shellcheck ' "$TESTS/render.sh" | sed 's/^ *//')
 lint() {
   fresh

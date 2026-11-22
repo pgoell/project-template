@@ -52,7 +52,7 @@ mise run check-commits  # cocogitto on unpushed commits
 - `.clang-tidy` turns every finding into an error. Turn a check off there, with the reason, not with `NOLINT` in the code.
 {%- endif %}
 - At most about 7 entries per folder; above that, group by concept into a subfolder with one entry point. `scripts/check-fan-out` enforces it, with `.fan-out-baseline` for accepted overages and `.fan-out-excludes` for folders that are lists by design.
-- No file passes 5000 tokens (bytes/4); `scripts/check-file-size` enforces it. A Claude Code hook in `.claude/settings.json` runs both checks on each edit. The hook needs `jq` on `PATH` or in mise's global config (`mise use -g jq`), since it reads no project's mise config.
+- No file passes 5000 tokens (bytes/4); `scripts/check-file-size` enforces it. A Claude Code hook in `.claude/settings.json` runs both checks on each edit.
 
 ## Comments and pull requests
 

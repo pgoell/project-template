@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  # `ready_for_review` beside the defaults, so a draft marked ready gets the
-  # reviews it skipped while a draft.
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
@@ -44,7 +42,6 @@ jobs:
       - name: Fan-out
         run: scripts/check-fan-out --all
 {%- if stack != 'none' %}
-      # A pull request checks the lines it adds; a push to {{ default_branch }} adds none.
       - name: Comments
         run: scripts/check-comments "origin/${GITHUB_BASE_REF:-{{ default_branch }}}"
 {%- endif %}
@@ -71,24 +68,13 @@ jobs:
       - name: Conventional commits
         run: mise run check-commits
 
-  # The reviews run on `pull_request`, never `pull_request_target`: a pull
-  # request from a fork runs with no secrets and a read-only token, so its code
-  # never meets the OAuth token. Anyone may comment on a public pull request,
-  # so the reviewer reads no comment straight from GitHub: a step writes it the
-  # pull request and the earlier threads by the bot, the author and the code
-  # owners. It can read files in the checkout, run git, post inline comments
-  # and write its summary, nothing more; the steps around it do the rest with
-  # the token.
   review:
 {%- raw %}
     name: ${{ matrix.name }}
 {%- endraw %}
-    # The job always runs and its first step decides, as a matrix job skipped by
-    # its `if:` never expands: it reports one check named `${{ "{{ matrix.name }}" }}`,
-    # and the required Review and Security would wait forever. So a fork or a
-    # Dependabot pull request (whose runs see neither the token nor write
-    # access), a draft, or a run whose {{ 'Lint' if stack == 'none' else 'Lint or Test' }} did not pass passes here
-    # with no round; a code owner reads the first two by hand.
+    # The first step decides whether a round runs, not the job's `if:`. A matrix
+    # job skipped by its `if:` never expands, so the required Review and Security
+    # checks would wait forever.
     needs: [{{ 'lint' if stack == 'none' else 'lint, test' }}]
 {%- raw %}
     if: ${{ !cancelled() && github.event_name == 'pull_request' }}
@@ -134,26 +120,21 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-      # The scrub below runs each command in Claude Code's sandbox, which needs
-      # bubblewrap and socat, neither on the runner image, and user namespaces,
-      # which Ubuntu's AppArmor blocks by default.
-      - if: steps.decide.outputs.run == 'true'
+      - name: Install bubblewrap and socat and allow user namespaces, which Claude Code's sandbox needs
+        if: steps.decide.outputs.run == 'true'
         run: |
           sudo apt-get install -y -qq bubblewrap socat
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      # A change must not edit the checks that judge it: the review guide, the
-      # prompts and the scripts are read as the base branch has them. The diff
-      # still shows the reviewer what the pull request does to them. A file the
-      # base branch lacks stays as the pull request has it.
-      - if: steps.decide.outputs.run == 'true'
+      - name: Read REVIEW.md and .github/review as the base branch has them
+        if: steps.decide.outputs.run == 'true'
         run: |
           for path in REVIEW.md .github/review; do
             if git cat-file -e "origin/$GITHUB_BASE_REF:$path" 2>/dev/null; then
               git checkout -q "origin/$GITHUB_BASE_REF" -- "$path"
             fi
           done
-      # Out of the checkout, where the reviewer's git cannot write over it.
-      - if: steps.decide.outputs.run == 'true'
+      - name: Copy the review scripts out of the checkout, where the reviewer cannot write
+        if: steps.decide.outputs.run == 'true'
         run: cp .github/review/round.sh .github/review/context.sh "$RUNNER_TEMP/"
       - id: base
         if: steps.decide.outputs.run == 'true'
@@ -201,9 +182,8 @@ jobs:
             echo "The reviewer wrote no summary." >&2
             exit 1
           fi
-      # Only after a review that ran to the end, so a failed run is redone in
-      # full by its rerun and not counted as a round.
-      - if: steps.round.outputs.rerun == 'false'
+      - name: Record the round, only after a review that ran to the end
+        if: steps.round.outputs.rerun == 'false'
         env:
           ROUND: ${{ steps.round.outputs.round }}
           FROM: ${{ steps.round.outputs.from }}

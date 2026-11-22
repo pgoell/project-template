@@ -22,7 +22,7 @@ git init -b master
 mise trust && mise install && mise run install
 git add -A && git commit -m "chore: initial commit"
 gh repo create pgoell/my-project --public --source . --push
-mise run repo:apply-settings   # merge settings, branch protection, Actions allowlist and SHA pinning, Dependabot security updates
+mise run repo:apply-settings   # applies the settings in .github/*.json
 claude setup-token             # prints an OAuth token for your Claude subscription
 gh secret set CLAUDE_CODE_OAUTH_TOKEN   # paste the token
 ```
@@ -69,18 +69,18 @@ Both files sit under paths in `.github/CODEOWNERS`, so a pull request that chang
 | `.config/lefthook.yaml` | commit-msg: cog; pre-commit: lint, file size, fan-out, comments; pre-push: test, commits, file size, fan-out, comments (none has no lint, test or comments) |
 | `cog.toml` | Conventional Commits check |
 | `.github/workflows/ci.yml` | Lint (with file size, fan-out and comments), Test, Commits, Review and Security jobs, every action pinned to a commit SHA |
-| `.claude/skills/verify/SKILL.md` | how an agent runs a change in the real app before a commit: Boot, Drive, Evidence, Tear down, to fill in |
-| `.github/review/`, `REVIEW.md` | the review prompts, the round counter, the reviewer's context, the outcomes report, and what the reviewer looks for, with a list of checks by trigger |
+| `.claude/skills/verify/SKILL.md` | how an agent runs a change in the real app before a commit, to fill in |
+| `.github/review/`, `REVIEW.md` | the review prompts and scripts, the outcomes report, and what the reviewer looks for |
 | `.github/CODEOWNERS` | the risky paths and who must review them |
-| `.github/pull_request_template.md` | What and why, Decisions (what the change decided that the issue did not), Testing (command, output, and what no check covers), Risk, How to revert |
-| `.github/ISSUE_TEMPLATE/task.md` | What and why, Out of scope, Done when (what shows the work is finished) |
+| `.github/pull_request_template.md` | What and why, Changes, Decisions, Testing, Risk, How to revert |
+| `.github/ISSUE_TEMPLATE/task.md` | What and why, Out of scope, Done when |
 | `.github/workflows/pr-title.yml` | PR title must be a conventional commit |
 | `.github/dependabot.yml` | weekly uv or bun, and Actions updates (cpp: Actions only, since Dependabot does not read CMake) |
 | `.github/*.json`, `scripts/` | repo settings, branch protection (code owner reviews), Actions allowlist, required SHA pins, fork PR approval, vulnerability alerts and Dependabot security updates, applied with `gh` |
 | `scripts/check-file-size` | fails on any authored file over 5000 tokens (bytes/4); add exclude globs in `.file-size-excludes` |
 | `scripts/check-fan-out` | fails on any folder with more than 7 entries; `--all` checks every folder, `--update-baseline` only lowers `.fan-out-baseline`; skip folders in `.fan-out-excludes` |
 | `scripts/check-comments` (not none) | fails on a comment that a change adds to Python, TypeScript, JavaScript, C or C++; lets through license headers, tool directives, doc comments and comments that link their source; skip paths in `.comments-excludes`. The [pstack](https://github.com/cursor/plugins/tree/main/pstack) `no-comments` rule, as a check |
-| `scripts/structure-hook`, `.claude/settings.json` | Claude Code `PostToolUse` hook: runs both checks on each edited file; needs `jq` on `PATH` or in mise's global config (`mise use -g jq`), since it reads no project's mise config |
+| `scripts/structure-hook`, `.claude/settings.json` | Claude Code `PostToolUse` hook: runs the file size and fan-out checks on each edited file; needs `jq` on `PATH` or in mise's global config (`mise use -g jq`) |
 | `.claude/CLAUDE.md` | project instructions for Claude Code |
 
 ## Update a generated project
@@ -93,7 +93,9 @@ uvx copier update
 ## Develop the template
 
 ```sh
-mise run test   # tests the check scripts, compares them with their canonical copies, renders every stack and context into a temp dir, then runs lint, tests, actionlint and shellcheck there
+mise run test
 ```
+
+It tests the check scripts, then renders every stack and context into a temp dir and runs lint, tests, actionlint and shellcheck there.
 
 `scripts/check-fan-out`, `check-file-size` and `structure-hook` are copies: their canonical source is `plugins/structure/skills/setting-up-the-checks/assets/` in [pgoell-claude-tools](https://github.com/pgoell/pgoell-claude-tools). `mise run test` fetches that folder from its master and fails when a copy differs or the fetch fails, so it needs the network. Fix a script there first, then copy its bytes here. The `pre-commit` and `pre-push` scripts there stay out: lefthook does their work here.
