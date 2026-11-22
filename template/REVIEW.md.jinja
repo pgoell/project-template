@@ -10,6 +10,19 @@ harm here, one line each. For example: data lost or garbled, dev touching
 prod, a doc that says something the code no longer does, a migration that
 cannot go back. -->
 
+## Checks by trigger
+
+Bugs that got past review once, as rows. Check only the rows whose trigger this
+diff matches.
+
+<!-- Add a row when a bug gets past review: what in a diff should have raised
+the question, what to check, and the pull request or incident it comes from.
+Delete a row that no longer fires. For example:
+
+- **Trigger**: the diff changes a stored format or a message type.
+  **Check**: does data written before the change still load?
+  **From**: #12 -->
+
 ## Security model
 
 <!-- Who may reach what, where secrets live, and what the project accepts.

@@ -27,9 +27,28 @@ claude setup-token             # prints an OAuth token for your Claude subscript
 gh secret set CLAUDE_CODE_OAUTH_TOKEN   # paste the token
 ```
 
-Then fill in the two marked sections of `REVIEW.md`: what counts as a failure in this project, and its security model.
+Then set up the two files that say how a change is checked here; see "Set up verify and REVIEW.md" below.
 
 Agents push as a separate GitHub account, not as you: invite it as a collaborator with write access, and give it a classic token with the `repo` scope and not the `workflow` scope, so it cannot change `.github/workflows`. A fine-grained token cannot reach a repo of another personal account.
+
+## Set up verify and REVIEW.md
+
+A fresh render checks a change with lint, the tests and the Claude review. Two files make those checks fit the project, and both start as marked sections to fill in.
+
+`.claude/skills/verify/SKILL.md` tells an agent how to run a change in the real app before it commits. Fill it in once the project has something to start:
+
+1. Ask Claude: "Fill in the verify skill. Find how this app starts on dev data, drive one real user flow, and say what to keep as evidence."
+2. Ask it to run the skill three times from a clean checkout. All three runs must give the same result in under a minute; fix what makes them differ.
+3. Under Drive, list the few flows that must always work. Add a flow when a bug gets past it.
+4. Delete the "Not filled in yet" section.
+
+`REVIEW.md` tells the CI reviewer what to look for:
+
+1. "What counts as a failure here": the few ways a change does real harm in this project, one line each.
+2. "Security model": who may reach what, and where secrets live.
+3. "Checks by trigger" starts empty. Each time a bug gets past review, add a row: what in the diff should have raised the question, what to check, and the pull request it comes from. The reviewer checks only the rows whose trigger a diff matches.
+
+Both files sit under paths in `.github/CODEOWNERS`, so a pull request that changes them waits for a code owner.
 
 ## Review and merge
 
@@ -49,7 +68,8 @@ Agents push as a separate GitHub account, not as you: invite it as a collaborato
 | `.config/lefthook.yaml` | commit-msg: cog; pre-commit: lint, file size, fan-out, comments; pre-push: test, commits, file size, fan-out, comments (none has no lint, test or comments) |
 | `cog.toml` | Conventional Commits check |
 | `.github/workflows/ci.yml` | Lint (with file size, fan-out and comments), Test, Commits, Review and Security jobs, every action pinned to a commit SHA |
-| `.github/review/`, `REVIEW.md` | the review prompts, the round counter, the reviewer's context, the outcomes report, and what the reviewer looks for |
+| `.claude/skills/verify/SKILL.md` | how an agent runs a change in the real app before a commit: Boot, Drive, Evidence, Tear down, to fill in |
+| `.github/review/`, `REVIEW.md` | the review prompts, the round counter, the reviewer's context, the outcomes report, and what the reviewer looks for, with a list of checks by trigger |
 | `.github/CODEOWNERS` | the risky paths and who must review them |
 | `.github/pull_request_template.md` | What and why, Decisions (what the change decided that the issue did not), Testing (command, output, and what no check covers), Risk, How to revert |
 | `.github/ISSUE_TEMPLATE/task.md` | What and why, Out of scope, Done when (what shows the work is finished) |
