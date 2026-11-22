@@ -11,7 +11,6 @@ if(SANITIZE)
   add_link_options(-fsanitize=address,undefined)
 endif()
 
-# Warnings as errors for this project's targets only, not for GoogleTest.
 set(WARNINGS -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
 
 add_library({{ project_name }}-lib src/project.cpp)

@@ -1,8 +1,3 @@
-# Git hooks. Installed by `mise run install`.
-#
-# pre-commit stays fast ({% if stack != 'none' %}lint, format, {% endif %}file size, fan-out{% if stack != 'none' %} and new comments{% endif %} only). Anything slow enough to make
-# you reach for --no-verify belongs in pre-push instead.
-
 commit-msg:
   commands:
     cog:

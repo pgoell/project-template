@@ -5,10 +5,6 @@
 #   scripts/check-comments          lines the index adds over HEAD (pre-commit)
 #   scripts/check-comments REF      lines HEAD adds since its merge base with REF
 #                                   (pre-push, CI); every line when REF is unknown
-#
-# A comment may stay when it is a license header, a directive a tool reads, a
-# doc comment (/** or ///), or links the spec, issue or vendor doc it follows.
-# Skip generated or vendored code with git pathspec globs in .comments-excludes.
 import io
 import re
 import subprocess

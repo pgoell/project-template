@@ -1,5 +1,3 @@
-# Copier template: a project on mise, lefthook, cocogitto and GitHub CI with a
-# Claude review, in Python, TypeScript, C++, or none of them.
 _subdirectory: template
 _templates_suffix: .jinja
 

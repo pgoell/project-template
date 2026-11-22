@@ -1,5 +1,3 @@
-# mise.toml: toolchain pins and task definitions
-
 [tools]
 {%- if stack == 'python' %}
 python    = "{{ python_version }}"
@@ -23,8 +21,6 @@ lefthook  = "latest"
 cocogitto = "latest"
 jq        = "latest"
 
-# ─── Bootstrap ──────────────────────────────────────────────────────────────
-
 [tasks.install]
 description = "Install git hooks{% if stack != 'none' %} and dependencies{% endif %}"
 run = [
@@ -39,13 +35,9 @@ run = [
 ]
 {%- if stack == 'python' %}
 
-# ─── Testing ────────────────────────────────────────────────────────────────
-
 [tasks.test]
 description = "Run tests"
 run = "uv run pytest"
-
-# ─── Lint & format ──────────────────────────────────────────────────────────
 
 [tasks.lint]
 description = "Lint, format-check and type-check"
@@ -60,14 +52,10 @@ description = "Auto-format"
 run = "uv run ruff format"
 {%- elif stack == 'typescript' %}
 
-# ─── Testing ────────────────────────────────────────────────────────────────
-
 # `--bun` runs the tools' node scripts on bun, so the project needs no node.
 [tasks.test]
 description = "Run tests"
 run = "bun --bun run vitest run"
-
-# ─── Lint & format ──────────────────────────────────────────────────────────
 
 [tasks.lint]
 description = "Lint, format-check and type-check"
@@ -81,9 +69,6 @@ description = "Auto-format"
 run = "bun --bun run biome format --write"
 {%- elif stack == 'cpp' %}
 
-# ─── Build & test ───────────────────────────────────────────────────────────
-
-# The dev preset builds Debug with AddressSanitizer and UndefinedBehaviorSanitizer.
 [tasks.build]
 description = "Configure and build the dev preset"
 run = [
@@ -96,9 +81,6 @@ description = "Run tests under the sanitizers"
 depends = ["build"]
 run = "ctest --preset dev"
 
-# ─── Lint & format ──────────────────────────────────────────────────────────
-
-# clang-tidy reads build/dev/compile_commands.json, which the configure writes.
 [tasks.lint]
 description = "Format-check and clang-tidy"
 run = [
@@ -112,11 +94,8 @@ description = "Auto-format"
 run = "git ls-files -z -co --exclude-standard '*.cpp' '*.hpp' | xargs -0 -r clang-format -i"
 {%- endif %}
 
-# ─── Commits ────────────────────────────────────────────────────────────────
-
 [tasks.check-commits]
 description = "Verify commits since origin/{{ default_branch }} are conventional"
-# Before the first push there is no origin/{{ default_branch }}: check the whole history.
 run = '''
 if git rev-parse -q --verify origin/{{ default_branch }} >/dev/null; then
   cog check origin/{{ default_branch }}..HEAD
@@ -124,8 +103,6 @@ else
   cog check
 fi
 '''
-
-# ─── GitHub repo config ─────────────────────────────────────────────────────
 
 [tasks."repo:apply-settings"]
 description = "Apply GitHub repo + branch-protection settings from .github/*.json, turn on Dependabot security updates"
