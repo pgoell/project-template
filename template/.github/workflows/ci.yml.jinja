@@ -141,6 +141,17 @@ jobs:
         run: |
           sudo apt-get install -y -qq bubblewrap socat
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      # A change must not edit the checks that judge it: the review guide, the
+      # prompts and the scripts are read as the base branch has them. The diff
+      # still shows the reviewer what the pull request does to them. A file the
+      # base branch lacks stays as the pull request has it.
+      - if: steps.decide.outputs.run == 'true'
+        run: |
+          for path in REVIEW.md .github/review; do
+            if git cat-file -e "origin/$GITHUB_BASE_REF:$path" 2>/dev/null; then
+              git checkout -q "origin/$GITHUB_BASE_REF" -- "$path"
+            fi
+          done
       # Out of the checkout, where the reviewer's git cannot write over it.
       - if: steps.decide.outputs.run == 'true'
         run: cp .github/review/round.sh .github/review/context.sh "$RUNNER_TEMP/"
