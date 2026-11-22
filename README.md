@@ -37,10 +37,10 @@ A fresh render checks a change with lint, the tests and the Claude review. Two f
 
 `.claude/skills/verify/SKILL.md` tells an agent how to run a change in the real app before it commits. Fill it in once the project has something to start:
 
-1. Ask Claude: "Fill in the verify skill. Find how this app starts on dev data, drive one real user flow, and say what to keep as evidence."
+1. Run `/pstack:create-verification-skill` (the [pstack](https://github.com/cursor/plugins/tree/main/pstack) plugin) and tell it to write to `.claude/skills/verify/` under the name `verify`, in place of the skeleton, and to keep the Rules section. It reads the repo for how the app starts and how to drive it, writes Launch, Doctor, Drive, Evidence and Cleanup, seeds a feature map with one file per feature, and runs the result once before it hands over. Without the plugin, ask Claude: "Fill in the verify skill. Find how this app starts on dev data, drive one real user flow, and say what to keep as evidence."
 2. Ask it to run the skill three times from a clean checkout. All three runs must give the same result in under a minute; fix what makes them differ.
-3. Under Drive, list the few flows that must always work. Add a flow when a bug gets past it.
-4. Delete the "Not filled in yet" section.
+3. Keep the flows that must always work in the feature map, or under Drive. Add a flow when a bug gets past it.
+4. Run `/pstack:maintain-verification-skill` from time to time: it drives every mapped feature and proposes corrections where the skill and the app have drifted apart.
 
 `REVIEW.md` tells the CI reviewer what to look for:
 

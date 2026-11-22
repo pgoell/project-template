@@ -7,19 +7,25 @@ description: Run a change in the real {{ project_name }} and keep evidence that 
 
 Passing tests are not this. To verify is to run what you changed the way its user will, and to keep what you saw.
 
-<!-- Fill in the four sections below for {{ project_name }} once it has
-something to start. Then run this skill three times from a clean checkout: all
-three runs must give the same result in under a minute. Then delete this
-comment and "Not filled in yet". -->
+<!-- Fill in the five sections below for {{ project_name }} once it has
+something to start, or let the pstack skill create-verification-skill write
+them in place of this file, keeping Rules. Then run this skill three times
+from a clean checkout: all three runs must give the same result in under a
+minute. Then delete this comment and "Not filled in yet". -->
 
 ## Not filled in yet
 
 Until the sections below are filled in: {% if stack == 'none' %}open what you changed as its reader will see it{% else %}run `mise run test`{% endif %}, and write "verify skill not filled in" under "Not checked" in the pull request.
 
-## Boot
+## Launch
 
 <!-- The one command that starts the app from a clean checkout, on dev data
 only, and how to tell it is up: a port, a log line, a health URL. -->
+
+## Doctor
+
+<!-- One read-only check that says whether a running instance is worth
+driving: the process is up, it is this build, the port is ours. -->
 
 ## Drive
 
@@ -32,9 +38,9 @@ the steps and the result to expect. -->
 <!-- What to keep from a run: the command and its output, a screenshot, a log
 line. It goes under Testing in the pull request. -->
 
-## Tear down
+## Cleanup
 
-<!-- How to stop what Boot started, and what to delete. -->
+<!-- How to stop what Launch started, and what to delete. Never the evidence. -->
 
 ## Rules
 
