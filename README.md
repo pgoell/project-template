@@ -51,7 +51,8 @@ Agents push as a separate GitHub account, not as you: invite it as a collaborato
 | `.github/workflows/ci.yml` | Lint (with file size, fan-out and comments), Test, Commits, Review and Security jobs, every action pinned to a commit SHA |
 | `.github/review/`, `REVIEW.md` | the review prompts, the round counter, the reviewer's context, the outcomes report, and what the reviewer looks for |
 | `.github/CODEOWNERS` | the risky paths and who must review them |
-| `.github/pull_request_template.md` | What and why, Testing, Risk, How to revert |
+| `.github/pull_request_template.md` | What and why, Decisions (what the change decided that the issue did not), Testing (command, output, and what no check covers), Risk, How to revert |
+| `.github/ISSUE_TEMPLATE/task.md` | What and why, Out of scope, Done when (what shows the work is finished) |
 | `.github/workflows/pr-title.yml` | PR title must be a conventional commit |
 | `.github/dependabot.yml` | weekly uv or bun, and Actions updates (cpp: Actions only, since Dependabot does not read CMake) |
 | `.github/*.json`, `scripts/` | repo settings, branch protection (code owner reviews), Actions allowlist, required SHA pins, fork PR approval, vulnerability alerts and Dependabot security updates, applied with `gh` |

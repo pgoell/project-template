@@ -8,9 +8,18 @@ Closes #
 looks that way, and a link to the docs, spec or issue it follows. The
 explanation goes here, not in code comments. Leave out what the code shows. -->
 
+## Decisions
+
+<!-- What this change decided that the issue did not: a default chosen, a
+thing left out of scope, a requirement read another way where two clashed.
+One line each, or "none". -->
+
 ## Testing
 
-<!-- The tests or scripted runs that prove each change. Name them. -->
+<!-- The tests or scripted runs that prove each change. Name them, and give
+the command you ran with the last lines of its output. -->
+
+Not checked: <!-- what no test or run here covers, in one line -->
 
 ## Risk
 

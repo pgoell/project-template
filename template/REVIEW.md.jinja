@@ -51,7 +51,8 @@ answered before the merge. Everything else goes in the summary, where the
 author reads it and nothing waits on it: an agent fixes whatever it is told, so a
 blocking design point costs a commit and a CI run whether it mattered or not.
 
-- **Important**: a bug this diff brings in, or a gap against the linked issue.
+- **Important**: a bug this diff brings in, a gap against the linked issue, or
+  a test the PR body names that would pass with the change reverted.
   A thread on the file and line, naming the class of bug so the author fixes
   every place it occurs. Important findings come first: never leave one out to
   make room for anything else.
