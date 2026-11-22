@@ -38,16 +38,21 @@ fresh() {
   n=$((n + 1))
   REPO="$WORK/repo$n"
   mkdir -p "$REPO/scripts"
-  cp "$SCRIPTS/check-file-size" "$SCRIPTS/check-fan-out" "$SCRIPTS/structure-hook" "$REPO/scripts/"
+  cp "$SCRIPTS/check-file-size" "$SCRIPTS/check-fan-out" "$SCRIPTS/structure-hook" "$SCRIPTS/check-comments" "$REPO/scripts/"
   cd "$REPO" || exit 1
   git init -q
+  git config user.email test@example.com
+  git config user.name test
 }
 
 # Runs scripts/$1 with the other arguments; sets RC.
 run() {
   local s=$1
   shift
-  bash "scripts/$s" "$@" >/dev/null 2>&1
+  case $s in
+  check-comments) python3 "scripts/$s" "$@" >/dev/null 2>&1 ;;
+  *) bash "scripts/$s" "$@" >/dev/null 2>&1 ;;
+  esac
   RC=$?
 }
 
@@ -122,6 +127,54 @@ git config core.fsmonitor "$REPO/pwn.sh"
 mkfile note.md 10
 hook "$REPO/note.md"
 check "hook: core.fsmonitor of the edited repo does not run" "$([ -e pwned ] && echo ran || echo clean)" clean
+
+# Stages $2 as file $1 and runs check-comments on the index; sets RC.
+staged() {
+  mkdir -p "$(dirname "$1")"
+  printf '%s\n' "$2" >"$1"
+  git add "$1"
+  run check-comments
+}
+
+fresh
+staged src/a.py 'x = 1  # set x'
+check "comments: a Python comment fails" "$RC" 1
+staged src/a.py 'x = "# in a string"'
+check "comments: a hash in a Python string passes" "$RC" 0
+staged src/a.py "$(printf '#!/usr/bin/env python3\nx = 1  # noqa: E501\ny = 2  # https://example.com/issue/1\n# SPDX-License-Identifier: MIT')"
+check "comments: a shebang, directive, link and license pass" "$RC" 0
+staged src/a.ts 'let a = 1; // narrate'
+check "comments: a TypeScript line comment fails" "$RC" 1
+staged src/a.ts "$(printf '/** Public. */\nconst s = "// no";\nconst t = `${"/*"} x`;')"
+check "comments: a doc comment and slashes in strings pass" "$RC" 0
+staged src/a.cpp "$(printf 'auto r = R"x(// )" no)x";\nint n = 1'"'"'000;\n}  // namespace demo')"
+check "comments: a raw string, digit separators and a namespace end pass" "$RC" 0
+staged src/a.cpp "$(printf '/* block\n   prose */\nint n = 1;')"
+check "comments: a C++ block comment fails" "$RC" 1
+staged notes.sh '# shell is not checked'
+git rm -q --cached src/a.cpp
+run check-comments
+check "comments: other languages pass" "$RC" 0
+
+fresh
+printf 'x = 1  # old\n' >a.py
+git add a.py
+git commit -qm one
+printf 'x = 1  # old\ny = 2\n' >a.py
+git add a.py
+run check-comments
+check "comments: an old comment in a changed file passes" "$RC" 0
+git commit -qm two
+git branch base
+printf 'x = 1  # old\ny = 2\nz = 3  # new\n' >a.py
+git commit -qam three
+run check-comments base
+check "comments: a comment added since the base fails" "$RC" 1
+run check-comments origin/nowhere
+check "comments: an unknown base checks every line" "$RC" 1
+printf '%s\n' '# generated' 'a.py' >.comments-excludes
+run check-comments base
+check "comments: an excluded path passes" "$RC" 0
 
 # Runs the drift test against a canonical folder on disk; sets RC.
 drift() {

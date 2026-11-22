@@ -6,7 +6,11 @@ python    = "{{ python_version }}"
 uv        = "latest"
 {%- elif stack == 'typescript' %}
 bun       = "latest"
+# Runs scripts/check-comments.
+python    = "3.14"
 {%- elif stack == 'cpp' %}
+# Runs scripts/check-comments.
+python    = "3.14"
 cmake     = "latest"
 ninja     = "latest"
 # uv runs the pipx backend. clang-format and clang-tidy stay on one major

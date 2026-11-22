@@ -46,9 +46,9 @@ Agents push as a separate GitHub account, not as you: invite it as a collaborato
 | `pyproject.toml` (python) | uv package in `src/`, dev group pytest, ruff (with complexity limits and no relative imports), ty |
 | `package.json`, `tsconfig.json`, `biome.json` (typescript) | bun package in `src/`, strict tsc, biome with a complexity limit, vitest |
 | `CMakeLists.txt`, `CMakePresets.json`, `.clang-format`, `.clang-tidy` (cpp) | C++20 library and executable in `src/`, warnings as errors, GoogleTest pinned by hash, `dev` preset with sanitizers, clang-tidy with a complexity limit |
-| `.config/lefthook.yaml` | commit-msg: cog; pre-commit: lint, file size, fan-out; pre-push: test, commits, file size, fan-out |
+| `.config/lefthook.yaml` | commit-msg: cog; pre-commit: lint, file size, fan-out, comments; pre-push: test, commits, file size, fan-out, comments (none has no lint, test or comments) |
 | `cog.toml` | Conventional Commits check |
-| `.github/workflows/ci.yml` | Lint (with file size and fan-out), Test, Commits, Review and Security jobs, every action pinned to a commit SHA |
+| `.github/workflows/ci.yml` | Lint (with file size, fan-out and comments), Test, Commits, Review and Security jobs, every action pinned to a commit SHA |
 | `.github/review/`, `REVIEW.md` | the review prompts, the round counter, the reviewer's context, the outcomes report, and what the reviewer looks for |
 | `.github/CODEOWNERS` | the risky paths and who must review them |
 | `.github/pull_request_template.md` | What and why, Testing, Risk, How to revert |
@@ -57,6 +57,7 @@ Agents push as a separate GitHub account, not as you: invite it as a collaborato
 | `.github/*.json`, `scripts/` | repo settings, branch protection (code owner reviews), Actions allowlist, required SHA pins, fork PR approval, vulnerability alerts and Dependabot security updates, applied with `gh` |
 | `scripts/check-file-size` | fails on any authored file over 5000 tokens (bytes/4); add exclude globs in `.file-size-excludes` |
 | `scripts/check-fan-out` | fails on any folder with more than 7 entries; `--all` checks every folder, `--update-baseline` only lowers `.fan-out-baseline`; skip folders in `.fan-out-excludes` |
+| `scripts/check-comments` (not none) | fails on a comment that a change adds to Python, TypeScript, JavaScript, C or C++; lets through license headers, tool directives, doc comments and comments that link their source; skip paths in `.comments-excludes`. The [pstack](https://github.com/cursor/plugins/tree/main/pstack) `no-comments` rule, as a check |
 | `scripts/structure-hook`, `.claude/settings.json` | Claude Code `PostToolUse` hook: runs both checks on each edited file; needs `jq` on `PATH` or in mise's global config (`mise use -g jq`), since it reads no project's mise config |
 | `.claude/CLAUDE.md` | project instructions for Claude Code |
 
