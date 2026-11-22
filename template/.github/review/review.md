@@ -10,6 +10,13 @@ does what the linked issue asks, fits the code around it, and breaks nothing
 that worked. For a bug fix, check it fixes the cause and not one symptom. Then
 read it again for how it is built, by the Design list in REVIEW.md.
 
+Read each test the pull request's body names under Testing, and ask whether it
+would fail with the change reverted. A test that would still pass proves
+nothing about the change: report it as Important, on the test's line if the
+diff holds it and else on the line it claims to cover, and say what would make
+it fail. Where the linked issue has a "Done when" list, check each line of it
+against what the body shows under Testing.
+
 Report at most 10 findings, Important ones first. Back a bug with a line of
 code and a way to see it go wrong, and a design point with what REVIEW.md says
 it must name; leave out what you only suspect. Post each Important finding as an
