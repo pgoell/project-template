@@ -35,6 +35,7 @@ for stack in python typescript cpp none; do
         git -c user.name=render -c user.email=render@example.com commit -qm "chore: render" --no-verify
         mise exec -- scripts/check-comments origin/master
       fi
+      test -f .claude/skills/verify/SKILL.md
       scripts/check-file-size
       scripts/check-fan-out --all
       actionlint

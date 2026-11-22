@@ -1,0 +1,45 @@
+---
+name: verify
+description: Run a change in the real {{ project_name }} and keep evidence that it works. Use before every commit that changes behaviour and before opening a pull request.
+---
+
+# Verify a change
+
+Passing tests are not this. To verify is to run what you changed the way its user will, and to keep what you saw.
+
+<!-- Fill in the four sections below for {{ project_name }} once it has
+something to start. Ask Claude to find how the app starts on dev data, drive
+one real user flow and say what to keep as evidence; then to run this skill
+three times from a clean checkout. All three runs must give the same result in
+under a minute: a slow or flaky verify gets skipped. Then delete this comment
+and "Not filled in yet". -->
+
+## Not filled in yet
+
+Until the sections below are filled in: {% if stack == 'none' %}open what you changed as its reader will see it{% else %}run `mise run test`{% endif %}, and write "verify skill not filled in" under "Not checked" in the pull request.
+
+## Boot
+
+<!-- The one command that starts the app from a clean checkout, on dev data
+only, and how to tell it is up: a port, a log line, a health URL. -->
+
+## Drive
+
+<!-- How to reach a change the way its user does: a CLI call, an HTTP request,
+a browser flow, a script. Then the flows that must always work, one line each:
+the steps and the result to expect. -->
+
+## Evidence
+
+<!-- What to keep from a run: the command and its output, a screenshot, a log
+line. It goes under Testing in the pull request. -->
+
+## Tear down
+
+<!-- How to stop what Boot started, and what to delete. -->
+
+## Rules
+
+- Drive the flow your change touches, and the flows that must always work.
+- When a check still fails after three attempts at a fix, stop and ask a person. Say what you tried.
+- Never make a check pass by skipping it, running it again or adding a sleep. Fix the cause of a flaky check, or delete the check and write down why.

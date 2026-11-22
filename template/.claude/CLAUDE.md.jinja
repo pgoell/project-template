@@ -66,6 +66,7 @@ mise run check-commits  # cocogitto on unpushed commits
 
 - Conventional Commits (`feat:`, `fix:`, `chore:` ...). The `commit-msg` hook rejects anything else.
 - Default branch is `{{ default_branch }}`. With branch protection applied (`mise run repo:apply-settings`), changes land through PRs that pass Lint,{% if stack != 'none' %} Test,{% endif %} Commits, Review and Security.
+- Before a commit that changes behaviour, run the `verify` skill (`.claude/skills/verify/SKILL.md`) and put what it shows under Testing in the pull request.
 - An issue says what shows it is finished under "Done when" (`.github/ISSUE_TEMPLATE/task.md`), also when you open it with `gh`. A pull request's body shows the command and output that prove it, says what no check covers, and lists what the change decided that the issue did not.
 - Review and Security are Claude reviews in CI. They follow `REVIEW.md`; answer every Important thread before the merge. A PR that touches a path in `.github/CODEOWNERS` also needs a code owner's review.
 - Every `uses:` in a workflow names a full commit SHA, with the version as a comment. The repo refuses an action on a tag, and any action whose owner is not in `.github/selected-actions.json`. Dependabot updates the SHAs.
