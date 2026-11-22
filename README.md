@@ -34,6 +34,7 @@ Agents push as a separate GitHub account, not as you: invite it as a collaborato
 ## Review and merge
 
 - `Review` and `Security` run `anthropics/claude-code-action` after Lint and Test pass, on pull requests from a branch of this repo that are not drafts and not from Dependabot. They post each Important finding as a thread, which must be answered before the merge, and put Design (at most 3), Pre-existing and Nit findings in a summary. Round 1 reads the whole pull request, later rounds only the new commits. The rounds have no limit.
+- The review reads `REVIEW.md` and `.github/review/` from the base branch, so a pull request cannot loosen the review that judges it; a change to them counts from the next pull request on. The workflow file itself still comes from the pull request, which GitHub does for every `pull_request` run; the code owner review guards it.
 - A pull request that touches a path in `.github/CODEOWNERS` (CI, settings, scripts, agent settings, deploy and container files, migrations, the manifest and lock) needs a review from a code owner. GitHub reads that file from the base branch, so a pull request cannot take its own paths off the list. A push dismisses the review.
 - Branch protection does not bind admins, so the owner merges a risky pull request of their own with `gh pr merge --admin`. Nobody else can.
 - `python3 .github/review/outcomes.py [days] [sample size]` counts how the Important threads were answered, the rounds each pull request took, and picks pull requests with Design points for you to read.
