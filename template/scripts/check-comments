@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Fail when a commit adds a comment to Python, TypeScript, JavaScript, C or C++
-# code. Only added lines count, so old comments do not block a change.
+# Fail when a commit adds a comment to Python, TypeScript, JavaScript, C, C++ or
+# Rust code. Only added lines count, so old comments do not block a change.
 #
 #   scripts/check-comments          lines the index adds over HEAD (pre-commit)
 #   scripts/check-comments REF      lines HEAD adds since its merge base with REF
@@ -16,12 +16,14 @@ PYTHON = {".py", ".pyi"}
 C_LIKE = {".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs",
           ".c", ".h", ".cc", ".cpp", ".cxx", ".hh", ".hpp", ".hxx"}
 CPP = {".c", ".h", ".cc", ".cpp", ".cxx", ".hh", ".hpp", ".hxx"}
+RUST = {".rs"}
 
 KEEP = re.compile(
     r"SPDX-License-Identifier|Copyright|https?://"
     r"|^(noqa|type:|ty:|pyright:|mypy:|pylint:|fmt:|isort:|ruff:|pragma\b|-\*-)"
     r"|^(biome-ignore|@ts-expect-error|eslint-|prettier-ignore|istanbul |c8 |v8 )"
-    r"|^(NOLINT|clang-format |IWYU pragma|namespace\b|<reference )",
+    r"|^(NOLINT|clang-format |IWYU pragma|namespace\b|<reference )"
+    r"|^SAFETY:",
     re.IGNORECASE,
 )
 
@@ -29,7 +31,7 @@ HELP = """\
 Each comment above was added by this change. Say it with names, types and
 structure instead, or turn the constraint into a type, lint rule or test.
 A comment stays only when it is a license header, a tool directive, a doc
-comment on a public API (/** or ///), or links the spec or issue it follows.
+comment (/**, /// or //!), or links the spec or issue it follows.
 In Claude Code, /pstack:no-comments reviews the diff the same way."""
 
 
@@ -104,6 +106,75 @@ def c_comments(text, cpp):
     return found
 
 
+RUST_RAW_STRING = re.compile(r'(?<![A-Za-z0-9_])[bc]?r(#*)"')
+
+
+def rust_char_end(text, i):
+    if text[i + 1 : i + 2] == "\\":
+        end = text.find("'", i + 3)
+        return len(text) if end < 0 else end + 1
+    if text[i + 2 : i + 3] == "'":
+        return i + 3
+    return i + 1
+
+
+def rust_comments(text):
+    found, i, line, n = [], 0, 1, len(text)
+    while i < n:
+        c, nxt = text[i], text[i + 1 : i + 2]
+        raw = RUST_RAW_STRING.match(text, i) if c in "bcr" else None
+        if c == "\n":
+            line += 1
+            i += 1
+        elif c == "/" and nxt == "/":
+            end = text.find("\n", i)
+            end = n if end < 0 else end
+            body = text[i + 2 : end]
+            doc = body.startswith("!") or (body.startswith("/") and not body.startswith("//"))
+            if not doc:
+                found.append((line, line, body.strip()))
+            i = end
+        elif c == "/" and nxt == "*":
+            depth, j = 1, i + 2
+            while j < n and depth:
+                if text.startswith("/*", j):
+                    depth, j = depth + 1, j + 2
+                elif text.startswith("*/", j):
+                    depth, j = depth - 1, j + 2
+                else:
+                    j += 1
+            body = text[i:j]
+            doc = body.startswith("/*!") or (body.startswith("/**") and body[3:4] not in ("*", "/"))
+            if not doc:
+                found.append((line, line + body.count("\n"), body[2:-2].strip()))
+            line += body.count("\n")
+            i = j
+        elif raw:
+            close = text.find('"' + raw.group(1), raw.end())
+            end = n if close < 0 else close + 1 + len(raw.group(1))
+            line += text.count("\n", i, end)
+            i = end
+        elif c == '"':
+            j = i + 1
+            while j < n and text[j] != '"':
+                j += 2 if text[j] == "\\" else 1
+            line += text.count("\n", i, j)
+            i = j + 1
+        elif c == "'":
+            i = rust_char_end(text, i)
+        else:
+            i += 1
+    return found
+
+
+def scan(text, suffix):
+    if suffix in PYTHON:
+        return python_comments(text)
+    if suffix in RUST:
+        return rust_comments(text)
+    return c_comments(text, suffix in CPP)
+
+
 def added_lines(compare):
     diff = git("diff", "-U0", "-M", "--diff-filter=AMR", "--no-color", "--no-ext-diff", *compare)
     added, path = {}, None
@@ -142,11 +213,10 @@ def main():
     failures = []
     for path, lines in sorted(added.items()):
         suffix = Path(path).suffix.lower()
-        if path in skip or suffix not in PYTHON | C_LIKE:
+        if path in skip or suffix not in PYTHON | C_LIKE | RUST:
             continue
         text = git("show", f"{revision}{path}")
-        found = python_comments(text) if suffix in PYTHON else c_comments(text, suffix in CPP)
-        for first, last, body in found:
+        for first, last, body in scan(text, suffix):
             if KEEP.search(body) or not lines.intersection(range(first, last + 1)):
                 continue
             failures.append(f"{path}:{first}: {body.splitlines()[0][:100] if body else '(empty)'}")

@@ -79,7 +79,7 @@ mise run check-commits  # cocogitto on unpushed commits
 
 - Names and structure explain the code. A comment says only what the code cannot: a limit from outside it (a spec, a hardware or library quirk) or a reason that would surprise a reader. No comment restates the code, narrates the change or tells its history.
 {%- if stack != 'none' %}
-- `scripts/check-comments` fails on a comment a change adds, on commit, push and in CI. It lets through license headers, tool directives (`noqa`, `biome-ignore`, `NOLINT` ...), doc comments (`/**`, `///`) and a comment that links the spec, issue or vendor doc it follows. Turn a "do not change" comment into a type, lint rule or test instead. Generated or vendored code goes in `.comments-excludes`. In Claude Code, `/pstack:no-comments` (the pstack plugin) reviews a diff by the same rule.
+- `scripts/check-comments` fails on a comment a change adds, on commit, push and in CI. It lets through license headers, tool directives (`noqa`, `biome-ignore`, `NOLINT` ...), doc comments (`/**`, `///`, `//!`), a Rust `SAFETY:` comment and a comment that links the spec, issue or vendor doc it follows. Turn a "do not change" comment into a type, lint rule or test instead. Generated or vendored code goes in `.comments-excludes`. In Claude Code, `/pstack:no-comments` (the pstack plugin) reviews a diff by the same rule.
 {%- endif %}
 - The pull request explains the change. Under "Changes" in its body, show each change that needs explaining as a short excerpt of the code, say why it looks that way, and link the docs, spec or issue it follows.
 

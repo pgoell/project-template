@@ -336,6 +336,9 @@ printf '%s\n' \
   'into a subfolder named after it. Make that subfolder a deep module (John' \
   'Ousterhout, "A Philosophy of Software Design"): one entry point with a small' \
   'interface, the rest hidden behind it. Then fix the imports and links.' \
+  'Move only as many entries as it takes to get this folder under the limit,' \
+  'and change nothing in them but paths. Say in your final message what you' \
+  'moved.' \
   '' \
   'If no grouping fits (a log of dated files, one file per item of a list), add' \
   'the folder to .fan-out-excludes at the repo root, with a comment line above' \
