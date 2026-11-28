@@ -22,6 +22,14 @@ mise install      # cmake, ninja, clang-format, clang-tidy, lefthook, cocogitto,
 mise run install  # git hooks + configure (fetches GoogleTest)
 mise run test     # Debug build with sanitizers, then ctest
 mise run lint     # clang-format + clang-tidy
+{%- elif stack == 'rust' %}
+mise install      # rust, cargo-nextest, cargo-deny, cargo-machete,{% if frontend %} bun,{% endif %} lefthook, cocogitto, jq
+mise run install  # git hooks + dependencies
+mise run test     # nextest and doctests{% if frontend %}, vitest{% endif %}
+mise run lint     # rustfmt, clippy, cargo-deny, cargo-machete{% if frontend %}, biome, tsc{% endif %}
+{%- if frontend %}
+mise run fe:dev   # the frontend on Vite's dev server
+{%- endif %}
 {%- else %}
 mise install      # lefthook, cocogitto, jq
 mise run install  # git hooks
@@ -29,6 +37,8 @@ mise run install  # git hooks
 ```
 
 {% if stack == 'cpp' %}The compiler comes from the system: GCC 13 or Clang 17 or newer, with C++20.
+
+{% endif %}{% if frontend %}`frontend/` is an [Effect UI](https://github.com/Effect-TS/ui) app. Effect UI is a preview and not on npm: `frontend/package.json` takes `@effect/ui` from a pkg.pr.new URL that ends in a commit SHA, and Dependabot does not update it. To add `@effect/ui-kit` or `@effect/ui-devtools`, use the same URL form and the same SHA.
 
 {% endif %}The Claude Code hook in `.claude/settings.json` needs `jq` on `PATH` or in mise's global config (`mise use -g jq`): it reads no project's mise config, so the `jq` above does not serve it.
 

@@ -6,6 +6,8 @@ description: >
   Bootstraps mise (bun, lefthook, cocogitto) and installs the dependencies.
 {%- elif stack == 'cpp' %}
   Bootstraps mise (CMake, Ninja, clang-format, clang-tidy, lefthook, cocogitto).
+{%- elif stack == 'rust' %}
+  Bootstraps mise (Rust, nextest, cargo-deny, cargo-machete,{% if frontend %} bun,{% endif %} lefthook, cocogitto) and caches the build.
 {%- else %}
   Bootstraps mise (lefthook, cocogitto, jq).
 {%- endif %}
@@ -36,4 +38,14 @@ runs:
     - name: Install dependencies
       shell: bash
       run: bun install --frozen-lockfile
+{%- elif stack == 'rust' %}
+
+    - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+{%- if frontend %}
+
+    - name: Install frontend dependencies
+      shell: bash
+      working-directory: frontend
+      run: bun install --frozen-lockfile
+{%- endif %}
 {%- endif %}

@@ -8,12 +8,13 @@ src=$(mktemp -d)
 git ls-files -coz --exclude-standard | tar --null -T - -c | tar -x -C "$src"
 work=$(mktemp -d)
 
-for stack in python typescript cpp none; do
+for stack in python typescript cpp rust rust-frontend none; do
   for context in personal work; do
     out=$work/$stack-$context
     echo "=== $stack, $context"
     args=(--data project_name=sample-project --data description="Sample project.")
-    args+=(--data stack=$stack --data context=$context)
+    args+=(--data "stack=${stack%-frontend}" --data context=$context)
+    if [ "$stack" = rust-frontend ]; then args+=(--data frontend=true); fi
     if [ "$context" = work ]; then args+=(--data "approvers=alice bob"); fi
     uvx copier copy -q --defaults "${args[@]}" "$src" "$out"
     (

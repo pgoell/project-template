@@ -16,6 +16,17 @@ ninja     = "latest"
 uv        = "latest"
 "pipx:clang-format" = "23"
 "pipx:clang-tidy"   = "23"
+{%- elif stack == 'rust' %}
+# Runs scripts/check-comments.
+python    = "3.14"
+# One minor version, so a new release does not add clippy findings.
+rust      = { version = "1.100", components = "rustfmt,clippy" }
+cargo-deny = "latest"
+"aqua:nextest-rs/nextest/cargo-nextest" = "latest"
+"ubi:bnjbvr/cargo-machete" = "latest"
+{%- if frontend %}
+bun       = "latest"
+{%- endif %}
 {%- endif %}
 lefthook  = "latest"
 cocogitto = "latest"
@@ -31,6 +42,11 @@ run = [
   "bun install",
 {%- elif stack == 'cpp' %}
   "cmake --preset dev",
+{%- elif stack == 'rust' %}
+  "cargo fetch",
+{%- if frontend %}
+  "cd frontend && bun install",
+{%- endif %}
 {%- endif %}
 ]
 {%- if stack == 'python' %}
@@ -92,6 +108,52 @@ run = [
 [tasks.fmt]
 description = "Auto-format"
 run = "git ls-files -z -co --exclude-standard '*.cpp' '*.hpp' | xargs -0 -r clang-format -i"
+{%- elif stack == 'rust' %}
+
+# nextest runs no doctests, so `cargo test --doc` does.
+[tasks.test]
+description = "Run tests"
+run = [
+  "cargo nextest run",
+  "cargo test --doc",
+{%- if frontend %}
+  "cd frontend && bun --bun run vitest run",
+{%- endif %}
+]
+
+[tasks.lint]
+description = "Format-check, clippy, dependency checks{% if frontend %}, biome and tsc{% endif %}"
+run = [
+  "cargo fmt --check",
+  "cargo clippy --all-targets -- -D warnings",
+  "cargo deny check",
+  "cargo machete",
+{%- if frontend %}
+  "cd frontend && bun --bun run biome check",
+  "cd frontend && bun --bun run tsc --noEmit",
+{%- endif %}
+]
+
+[tasks.fmt]
+description = "Auto-format"
+run = [
+  "cargo fmt",
+{%- if frontend %}
+  "cd frontend && bun --bun run biome format --write",
+{%- endif %}
+]
+{%- if frontend %}
+
+[tasks."fe:dev"]
+description = "Run the frontend dev server"
+dir = "frontend"
+run = "bun --bun run vite"
+
+[tasks."fe:build"]
+description = "Build the frontend into frontend/dist"
+dir = "frontend"
+run = "bun --bun run vite build"
+{%- endif %}
 {%- endif %}
 
 [tasks.check-commits]

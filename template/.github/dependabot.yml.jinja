@@ -1,8 +1,9 @@
 version: 2
 updates:
-{%- if stack in ['python', 'typescript'] %}
-  - package-ecosystem: {{ 'uv' if stack == 'python' else 'bun' }}
-    directory: /
+{%- set ecosystems = {'python': [['uv', '/']], 'typescript': [['bun', '/']], 'rust': [['cargo', '/']] + ([['bun', '/frontend']] if frontend else [])} %}
+{%- for ecosystem, directory in ecosystems.get(stack, []) %}
+  - package-ecosystem: {{ ecosystem }}
+    directory: {{ directory }}
     schedule:
       interval: weekly
       day: monday
@@ -11,7 +12,7 @@ updates:
       prefix: build
     labels:
       - dependencies
-{% endif %}
+{%- endfor %}
   - package-ecosystem: github-actions
     directory: /
     schedule:

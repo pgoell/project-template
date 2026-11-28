@@ -36,6 +36,9 @@ jobs:
 {%- elif stack == 'cpp' %}
       - name: clang-format and clang-tidy
         run: mise run lint
+{%- elif stack == 'rust' %}
+      - name: rustfmt, clippy, cargo-deny and cargo-machete{% if frontend %}, biome and tsc{% endif %}
+        run: mise run lint
 {%- endif %}
       - name: File size
         run: scripts/check-file-size
@@ -53,7 +56,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - uses: ./.github/actions/setup-mise
-      - name: {{ {'python': 'Pytest', 'typescript': 'Vitest', 'cpp': 'CTest'}[stack] }}
+      - name: {{ {'python': 'Pytest', 'typescript': 'Vitest', 'cpp': 'CTest', 'rust': 'Nextest and vitest' if frontend else 'Nextest'}[stack] }}
         run: mise run test
 {%- endif %}
 
