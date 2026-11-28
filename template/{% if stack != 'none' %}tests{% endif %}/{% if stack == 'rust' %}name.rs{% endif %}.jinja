@@ -1,0 +1,4 @@
+#[test]
+fn exports_its_name() {
+    assert_eq!({{ project_name | replace('-', '_') }}::NAME, "{{ project_name }}");
+}

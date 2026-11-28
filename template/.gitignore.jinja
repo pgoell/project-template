@@ -18,6 +18,12 @@ dist/
 build/
 .cache/
 
+{% elif stack == 'rust' -%}
+target/
+{% if frontend -%}
+node_modules/
+dist/
+{% endif %}
 {% endif -%}
 
 .env

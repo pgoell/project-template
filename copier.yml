@@ -13,9 +13,15 @@ description:
 
 stack:
   type: str
-  help: "Language: python (uv, ruff, ty, pytest), typescript (bun, biome, tsc, vitest), cpp (CMake, Ninja, clang-format, clang-tidy, GoogleTest, sanitizers) or none (docs, decks: no Test job)"
-  choices: [python, typescript, cpp, none]
+  help: "Language: python (uv, ruff, ty, pytest), typescript (bun, biome, tsc, vitest), cpp (CMake, Ninja, clang-format, clang-tidy, GoogleTest, sanitizers), rust (cargo, rustfmt, clippy, nextest, cargo-deny, cargo-machete) or none (docs, decks: no Test job)"
+  choices: [python, typescript, cpp, rust, none]
   default: python
+
+frontend:
+  type: bool
+  help: Add an Effect UI frontend in frontend/ (bun, Vite, biome, tsc, vitest)
+  default: false
+  when: "{{ stack == 'rust' }}"
 
 context:
   type: str

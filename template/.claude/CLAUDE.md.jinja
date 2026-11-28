@@ -11,6 +11,12 @@
 - `src/`: the library (`project.hpp`, `project.cpp`) and the executable (`main.cpp`)
 - `tests/`: GoogleTest, run by ctest
 - `CMakePresets.json`: `dev` (Debug, AddressSanitizer and UndefinedBehaviorSanitizer, the default for every task) and `release`
+{%- elif stack == 'rust' %}
+- `src/`: the library (`lib.rs`) and the executable (`main.rs`)
+- `tests/`: integration tests, run by nextest
+{%- if frontend %}
+- `frontend/`: the Effect UI app (bun, Vite); components and their tests sit side by side in `frontend/src/`
+{%- endif %}
 {%- else %}
 - `src/`: the code, entry point `src/index.ts`
 - `tests/`: vitest
@@ -35,6 +41,14 @@ mise run build          # configure and build the dev preset
 mise run test           # build, then ctest under the sanitizers
 mise run lint           # clang-format --dry-run, clang-tidy
 mise run fmt            # clang-format -i
+{%- elif stack == 'rust' %}
+mise run test           # cargo nextest, doctests{% if frontend %}, vitest{% endif %}
+mise run lint           # cargo fmt --check, clippy, cargo deny, cargo machete{% if frontend %}, biome check, tsc --noEmit{% endif %}
+mise run fmt            # cargo fmt{% if frontend %}, biome format{% endif %}
+{%- if frontend %}
+mise run fe:dev         # Vite dev server
+mise run fe:build       # build into frontend/dist
+{%- endif %}
 {%- endif %}
 mise run check-commits  # cocogitto on unpushed commits
 ```
@@ -50,6 +64,13 @@ mise run check-commits  # cocogitto on unpushed commits
 - A module's public names live in one header. Other modules include that header and reach no deeper.
 - Modern C++20: RAII, `std::unique_ptr` over `new`, no raw owning pointers. A sanitizer finding is a bug, never noise.
 - `.clang-tidy` turns every finding into an error. Turn a check off there, with the reason, not with `NOLINT` in the code.
+{%- elif stack == 'rust' %}
+- A module's public names are its `pub` items. Other modules use those and reach no deeper; keep the rest private or `pub(crate)`.
+- Clippy warnings are errors. Turn a lint off under `[lints]` in `Cargo.toml`, with the reason, not with `#[allow]` in the code.
+- `cargo deny` fails on a dependency whose licence is not in `deny.toml`, and `cargo machete` on one the code does not use.
+{%- if frontend %}
+- The frontend is Effect UI, a preview whose API still changes. Read `frontend/node_modules/@effect/ui/AGENTS.md` before writing a component: it is the guide for the installed version.
+{%- endif %}
 {%- endif %}
 - At most about 7 entries per folder; above that, group by concept into a subfolder with one entry point. `scripts/check-fan-out` enforces it, with `.fan-out-baseline` for accepted overages and `.fan-out-excludes` for folders that are lists by design.
 - No file passes 5000 tokens (bytes/4); `scripts/check-file-size` enforces it. A Claude Code hook in `.claude/settings.json` runs both checks on each edit.
