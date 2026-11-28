@@ -79,7 +79,7 @@ A fresh render checks a change with lint, the tests and the Claude review. Two f
 | `.github/*.json`, `scripts/` | repo settings, branch protection (code owner reviews), Actions allowlist, required SHA pins, fork PR approval, vulnerability alerts and Dependabot security updates, applied with `gh` |
 | `scripts/check-file-size` | fails on any authored file over 5000 tokens (bytes/4); add exclude globs in `.file-size-excludes` |
 | `scripts/check-fan-out` | fails on any folder with more than 7 entries; `--all` checks every folder, `--update-baseline` only lowers `.fan-out-baseline`; skip folders in `.fan-out-excludes` |
-| `scripts/check-comments` (not none) | fails on a comment that a change adds to Python, TypeScript, JavaScript, C or C++ (it does not read Rust yet); lets through license headers, tool directives, doc comments and comments that link their source; skip paths in `.comments-excludes`. The [pstack](https://github.com/cursor/plugins/tree/main/pstack) `no-comments` rule, as a check |
+| `scripts/check-comments` (not none) | fails on a comment that a change adds to Python, TypeScript, JavaScript, C, C++ or Rust; lets through license headers, tool directives, doc comments and comments that link their source; skip paths in `.comments-excludes`. The [pstack](https://github.com/cursor/plugins/tree/main/pstack) `no-comments` rule, as a check |
 | `scripts/structure-hook`, `.claude/settings.json` | Claude Code `PostToolUse` hook: runs the file size and fan-out checks on each edited file; needs `jq` on `PATH` or in mise's global config (`mise use -g jq`) |
 
 ## Update a generated project

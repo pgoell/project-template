@@ -157,11 +157,17 @@ printf '%s\n' \
   '   not need to know how it works inside.' \
   "3. Check: if the new module's interface is nearly as big as its body, or every" \
   '   caller still reaches into its details, you picked the wrong line. Try again.' \
+  '   If one honest second try finds no such group, stop splitting and say so. A' \
+  '   person then chooses: split it another way, or add it to .file-size-excludes' \
+  '   with a comment line above it that says why.' \
+  'Keep the split small: move code without changing what it does, touch callers' \
+  'only to fix imports, and split no other file. Say in your final message which' \
+  'file you split and where each part went.' \
   '- Tests: split by the behaviour or module under test, one file per unit,' \
   '  shared fixtures in one helper.' \
   '- Docs: split by topic into a folder with an index page that links them.' \
-  '- Data (word lists, fixtures): move it into a data file and add it to the' \
-  '  exclude list, if no person or agent edits it by hand.' \
+  '- Data (word lists, fixtures): move it into a data file and add it to' \
+  '  .file-size-excludes at the repo root, if no person or agent edits it by hand.' \
   '- Skills: a SKILL.md over the limit moves step detail into references/ and' \
   '  links it from the step that needs it.' >&2
 exit 1

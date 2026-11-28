@@ -138,6 +138,12 @@ staged notes.sh '# shell is not checked'
 git rm -q --cached src/a.cpp
 run check-comments
 check "comments: other languages pass" "$RC" 0
+staged src/a.rs 'let a = 1; // narrate'
+check "comments: a Rust line comment fails" "$RC" 1
+staged src/a.rs "$(printf '/* outer /* inner */ still prose */\nfn f() {}')"
+check "comments: a nested Rust block comment fails" "$RC" 1
+staged src/a.rs "$(printf '//! Crate docs.\n/// Item docs.\nfn f<'"'"'a>(s: &'"'"'a str) -> char {\n    let _ = r#"// "no" /* "#;\n    let _ = "a \\" // b";\n    let _ = b'"'"'"'"'"';\n    // SAFETY: nothing unsafe here\n    '"'"'/'"'"'\n}')"
+check "comments: Rust docs, lifetimes, chars, strings and SAFETY pass" "$RC" 0
 
 fresh
 printf 'x = 1  # old\n' >a.py
